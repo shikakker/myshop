@@ -8,31 +8,10 @@ const merge = require('deepmerge')
 const prettier = require('prettier')
 const core = require('@vercel/commerce/config')
 
-const PROVIDERS = [
-  '@vercel/commerce-local',
-  '@vercel/commerce-bigcommerce',
-  '@vercel/commerce-saleor',
-  '@vercel/commerce-shopify',
-  '@vercel/commerce-swell',
-  '@vercel/commerce-vendure',
-  '@vercel/commerce-ordercloud',
-  '@vercel/commerce-kibocommerce',
-  '@vercel/commerce-spree',
-  '@vercel/commerce-commercejs',
-  '@vercel/commerce-sfcc',
-]
+const PROVIDERS = ['@vercel/commerce-local']
 
 function getProviderName() {
-  return (
-    process.env.COMMERCE_PROVIDER ||
-    (process.env.BIGCOMMERCE_STOREFRONT_API_URL
-      ? '@vercel/commerce-bigcommerce'
-      : process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN
-      ? '@vercel/commerce-shopify'
-      : process.env.NEXT_PUBLIC_SWELL_STORE_ID
-      ? '@vercel/commerce-swell'
-      : '@vercel/commerce-local')
-  )
+  return process.env.COMMERCE_PROVIDER || '@vercel/commerce-local'
 }
 
 function withCommerceConfig(nextConfig = {}) {
@@ -50,7 +29,7 @@ function withCommerceConfig(nextConfig = {}) {
   }
   if (!PROVIDERS.includes(provider)) {
     throw new Error(
-      `The commerce provider "${provider}" can't be found, please use one of "${PROVIDERS.join(
+      `The commerce provider "${provider}" is not installed in this production storefront. Supported provider: "${PROVIDERS.join(
         ', '
       )}"`
     )
