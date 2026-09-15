@@ -27,11 +27,11 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Audit production dependencies
-        run: node scripts/audit-production.js
-
       - name: Runtime dependency contract
         run: yarn test
+
+      - name: Audit production dependencies
+        run: node scripts/audit-production.js
 
       - name: Typecheck
         run: yarn types
