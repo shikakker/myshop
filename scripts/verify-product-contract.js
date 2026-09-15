@@ -11,6 +11,7 @@ const cart = read('site/pages/cart.tsx');
 const cartSidebar = read('site/components/cart/CartSidebarView/CartSidebarView.tsx');
 const footer = read('site/components/common/Footer/Footer.tsx');
 const nextConfig = read('site/next.config.js');
+const localCatalog = read('packages/local/src/data.json');
 
 for (const [label, source] of [
   ['SEO', seo],
@@ -37,6 +38,14 @@ for (const [label, source] of [
   if (!/isCommerceDemo/.test(source)) {
     failures.push(`${label} must explicitly guard checkout for the local demo provider`);
   }
+}
+
+if (/"vendor"\s*:\s*"Next\.js"|Next\.js Conf|limited edition|All proceeds will be donated/i.test(localCatalog)) {
+  failures.push('local catalog must not expose upstream event, scarcity, charity, or vendor claims as current product data');
+}
+
+if (!/This item is not offered for real purchase/.test(localCatalog)) {
+  failures.push('local catalog descriptions must state that sample inventory is not offered for real purchase');
 }
 
 if (failures.length) {
