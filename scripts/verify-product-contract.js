@@ -12,13 +12,18 @@ const cartSidebar = read('site/components/cart/CartSidebarView/CartSidebarView.t
 const footer = read('site/components/common/Footer/Footer.tsx');
 const nextConfig = read('site/next.config.js');
 const localCatalog = read('packages/local/src/data.json');
+const orders = read('site/pages/orders.tsx');
+const profile = read('site/pages/profile.tsx');
+const wishlist = read('site/pages/wishlist.tsx');
 
 for (const [label, source] of [
   ['SEO', seo],
   ['home', home],
   ['footer', footer],
+  ['orders', orders],
+  ['wishlist', wishlist],
 ]) {
-  if (/ACME Storefront|\bACME\b|Dessert dragée|Cupcake ipsum/.test(source)) {
+  if (/ACME Storefront|\bACME\b|Dessert dragée|Cupcake ipsum|Biscuit oat cake/i.test(source)) {
     failures.push(`${label} still exposes upstream/demo placeholder identity or lorem copy`);
   }
 }
@@ -37,6 +42,15 @@ for (const [label, source] of [
 ]) {
   if (!/isCommerceDemo/.test(source)) {
     failures.push(`${label} must explicitly guard checkout for the local demo provider`);
+  }
+}
+
+for (const [label, source] of [
+  ['orders', orders],
+  ['profile', profile],
+]) {
+  if (!/COMMERCE_CUSTOMERAUTH_ENABLED/.test(source) || !/notFound:\s*true/.test(source)) {
+    failures.push(`${label} must fail closed when customer authentication is disabled`);
   }
 }
 
