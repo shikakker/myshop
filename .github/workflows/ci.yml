@@ -24,11 +24,11 @@ jobs:
           node-version: 22
           cache: yarn
 
+      - name: Runtime and product contracts
+        run: yarn test
+
       - name: Install dependencies
         run: yarn install --frozen-lockfile
-
-      - name: Runtime dependency contract
-        run: yarn test
 
       - name: Audit production dependencies
         run: node scripts/audit-production.js
