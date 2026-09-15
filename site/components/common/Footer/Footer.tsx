@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import type { Page } from '@commerce/types/page'
 import getSlug from '@lib/get-slug'
-import { Github, Vercel } from '@components/icons'
+import { Github } from '@components/icons'
 import { Logo, Container } from '@components/ui'
 import { I18nWidget } from '@components/common'
 import s from './Footer.module.css'
@@ -25,6 +25,7 @@ const links = [
 const Footer: FC<Props> = ({ className, pages }) => {
   const { sitePages } = usePages(pages)
   const rootClassName = cn(s.root, className)
+  const year = new Date().getFullYear()
 
   return (
     <footer className={rootClassName}>
@@ -36,7 +37,7 @@ const Footer: FC<Props> = ({ className, pages }) => {
                 <span className="rounded-full border border-accent-6 mr-2">
                   <Logo />
                 </span>
-                <span>ACME</span>
+                <span>MyShop</span>
               </a>
             </Link>
           </div>
@@ -57,8 +58,10 @@ const Footer: FC<Props> = ({ className, pages }) => {
             <div className="flex space-x-6 items-center h-10">
               <a
                 className={s.link}
-                aria-label="Github Repository"
-                href="https://github.com/vercel/commerce"
+                aria-label="MyShop GitHub repository"
+                href="https://github.com/shikakker/myshop"
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 <Github />
               </a>
@@ -66,24 +69,21 @@ const Footer: FC<Props> = ({ className, pages }) => {
             </div>
           </div>
         </div>
-        <div className="pt-6 pb-10 flex flex-col md:flex-row justify-between items-center space-y-4 text-accent-6 text-sm">
+        <div className="pt-6 pb-10 flex flex-col md:flex-row justify-between items-center gap-4 text-accent-6 text-sm">
           <div>
-            <span>&copy; 2020 ACME, Inc. All rights reserved.</span>
+            <span>&copy; {year} MyShop Commerce Demo.</span>
           </div>
-          <div className="flex items-center text-primary text-sm">
-            <span className="text-primary">Created by</span>
+          <div className="text-center md:text-right">
+            <span>Adapted from </span>
             <a
-              rel="noopener noreferrer"
-              href="https://vercel.com"
-              aria-label="Vercel.com Link"
+              href="https://github.com/vercel/commerce"
               target="_blank"
-              className="text-primary"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
             >
-              <Vercel
-                className="inline-block h-6 ml-3 text-primary"
-                alt="Vercel.com Logo"
-              />
+              Vercel Commerce
             </a>
+            <span> for portfolio/demo use.</span>
           </div>
         </div>
       </Container>
@@ -109,7 +109,6 @@ function usePages(pages?: Page[]) {
   }
 }
 
-// Sort pages by the sort order assigned in the BC dashboard
 function bySortOrder(a: Page, b: Page) {
   return (a.sort_order ?? 0) - (b.sort_order ?? 0)
 }
