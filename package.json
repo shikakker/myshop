@@ -14,7 +14,7 @@
     "dev": "turbo run dev",
     "start": "turbo run start",
     "types": "turbo run types",
-    "test": "node scripts/verify-runtime-contract.js",
+    "test": "node scripts/verify-runtime-contract.js && node scripts/verify-product-contract.js",
     "prettier-fix": "prettier --write ."
   },
   "devDependencies": {
