@@ -6,26 +6,23 @@
     "node": "22.x"
   },
   "workspaces": [
-    "site",
-    "packages/commerce",
-    "packages/local"
+    "site"
   ],
   "scripts": {
-    "build": "turbo run build --filter=next-commerce...",
-    "dev": "turbo run dev",
-    "start": "turbo run start",
-    "types": "turbo run types",
+    "build": "yarn workspace next-commerce build",
+    "dev": "yarn workspace next-commerce dev",
+    "start": "yarn workspace next-commerce start",
+    "types": "yarn workspace next-commerce types",
     "test": "node scripts/verify-runtime-contract.js && node scripts/verify-product-contract.js",
     "prettier-fix": "prettier --write ."
   },
   "devDependencies": {
     "husky": "^7.0.4",
-    "prettier": "^2.5.1",
-    "turbo": "^1.2.16"
+    "prettier": "^2.5.1"
   },
   "husky": {
     "hooks": {
-      "pre-commit": "turbo run lint"
+      "pre-commit": "yarn workspace next-commerce lint"
     }
   },
   "packageManager": "yarn@1.22.17"
