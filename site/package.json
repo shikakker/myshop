@@ -11,6 +11,7 @@
     "start": "next start",
     "analyze": "BUNDLE_ANALYZE=both next build",
     "lint": "next lint",
+    "types": "tsc --noEmit",
     "prettier-fix": "prettier --write .",
     "find:unused": "npx next-unused"
   },
