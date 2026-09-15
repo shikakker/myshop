@@ -13,11 +13,8 @@ export async function getStaticProps({
   locale,
   locales,
 }: GetStaticPropsContext) {
-  // Disabling page if Feature is not available
   if (!process.env.COMMERCE_WISHLIST_ENABLED) {
-    return {
-      notFound: true,
-    }
+    return { notFound: true }
   }
 
   const config = { locale, locales }
@@ -27,15 +24,13 @@ export async function getStaticProps({
   const { categories } = await siteInfoPromise
 
   return {
-    props: {
-      pages,
-      categories,
-    },
+    props: { pages, categories },
   }
 }
 
 export default function Wishlist() {
   const { data: customer } = useCustomer()
+  // Provider wishlist item types are not normalized consistently across all adapters yet.
   // @ts-ignore Shopify - Fix this types
   const { data, isLoading, isEmpty } = useWishlist({ includeProducts: true })
 
@@ -43,9 +38,14 @@ export default function Wishlist() {
     <Container className="pt-4">
       <div className="mb-20">
         <Text variant="pageHeading">My Wishlist</Text>
+        {!customer && (
+          <p className="text-accent-6 pb-6">
+            Sign in with a wishlist-capable commerce provider to keep items associated with your account.
+          </p>
+        )}
         <div className="group flex flex-col">
           {isLoading ? (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3" role="status" aria-label="Loading wishlist">
               {rangeMap(12, (i) => (
                 <Skeleton key={i}>
                   <div className="w-60 h-60" />
@@ -53,19 +53,19 @@ export default function Wishlist() {
               ))}
             </div>
           ) : isEmpty ? (
-            <div className="flex-1 px-12 py-24 flex flex-col justify-center items-center ">
+            <div className="flex-1 px-6 sm:px-12 py-20 flex flex-col justify-center items-center">
               <span className="border border-dashed border-secondary flex items-center justify-center w-16 h-16 bg-primary p-12 rounded-lg text-primary">
                 <Heart className="absolute" />
               </span>
               <h2 className="pt-6 text-2xl font-bold tracking-wide text-center">
                 Your wishlist is empty
               </h2>
-              <p className="text-accent-6 px-10 text-center pt-2">
-                Biscuit oat cake wafer icing ice cream tiramisu pudding cupcake.
+              <p className="text-accent-6 px-4 sm:px-10 text-center pt-2">
+                Save products here when the configured commerce provider supports wishlists.
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-6 ">
+            <div className="grid grid-cols-1 gap-6">
               {data &&
                 // @ts-ignore - Wishlist Item Type
                 data.items?.map((item) => (
