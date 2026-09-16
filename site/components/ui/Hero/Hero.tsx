@@ -23,11 +23,12 @@ const Hero: FC<HeroProps> = ({ headline, description, cta }) => {
           <div className={s.description}>
             <p>{description}</p>
             {cta && (
-              <Link href={cta.href}>
-                <a className="flex items-center text-accent-0 pt-3 font-bold hover:underline cursor-pointer w-max-content">
-                  {cta.label}
-                  <ArrowRight width="20" heigh="20" className="ml-1" />
-                </a>
+              <Link
+                href={cta.href}
+                className="flex items-center text-accent-0 pt-3 font-bold hover:underline cursor-pointer w-max-content"
+              >
+                {cta.label}
+                <ArrowRight width="20" heigh="20" className="ml-1" />
               </Link>
             )}
           </div>
