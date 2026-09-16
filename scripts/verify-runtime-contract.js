@@ -29,6 +29,9 @@ if (sitePackage.dependencies?.['js-cookie'] !== '3.0.7') {
 if (sitePackage.dependencies?.postcss !== '8.5.28') {
   failures.push('site must use patched PostCSS 8.5.28');
 }
+if (rootPackage.resolutions?.postcss !== '8.5.28') {
+  failures.push('workspace must pin patched PostCSS 8.5.28 across transitive dependencies');
+}
 if (rootPackage.resolutions?.browserslist !== '4.28.7') {
   failures.push('workspace must pin patched browserslist 4.28.7 across the CSS toolchain');
 }
