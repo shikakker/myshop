@@ -20,6 +20,12 @@
     "husky": "^7.0.4",
     "prettier": "^2.5.1"
   },
+  "resolutions": {
+    "browserslist": "4.28.7",
+    "braces": "3.0.3",
+    "picomatch": "2.3.2",
+    "nanoid": "3.3.18"
+  },
   "husky": {
     "hooks": {
       "pre-commit": "yarn workspace next-commerce lint"
