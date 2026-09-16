@@ -84,6 +84,12 @@ if (!commerceConfig.includes("../packages/local/src/next.config.cjs")) {
 if (!commerceConfig.includes("'@vercel/commerce': path.resolve(__dirname, '../packages/commerce/src')")) {
   failures.push('webpack must alias @vercel/commerce to the in-repo core source');
 }
+if (!commerceConfig.includes('delete config.commerce')) {
+  failures.push('commerce config must strip the internal custom commerce key before Next.js validates next.config');
+}
+if (!commerceConfig.includes('String(Boolean(value))')) {
+  failures.push('commerce feature flags exposed through next.config env must be strings, not booleans');
+}
 
 for (const header of [
   'X-Content-Type-Options',
