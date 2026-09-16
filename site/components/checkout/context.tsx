@@ -1,5 +1,6 @@
 import React, {
   FC,
+  ReactNode,
   useCallback,
   useMemo,
   useReducer,
@@ -65,7 +66,11 @@ const checkoutReducer = (state: State, action: Action): State => {
   }
 }
 
-export const CheckoutProvider: FC = (props) => {
+interface CheckoutProviderProps {
+  children?: ReactNode
+}
+
+export const CheckoutProvider: FC<CheckoutProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(checkoutReducer, initialState)
 
   const setCardFields = useCallback(
@@ -85,7 +90,6 @@ export const CheckoutProvider: FC = (props) => {
   )
 
   const cardFields = useMemo(() => state.cardFields, [state.cardFields])
-
   const addressFields = useMemo(() => state.addressFields, [state.addressFields])
 
   const value = useMemo(
@@ -99,7 +103,9 @@ export const CheckoutProvider: FC = (props) => {
     [cardFields, addressFields, setCardFields, setAddressFields, clearCheckoutFields]
   )
 
-  return <CheckoutContext.Provider value={value} {...props} />
+  return (
+    <CheckoutContext.Provider value={value}>{children}</CheckoutContext.Provider>
+  )
 }
 
 export const useCheckoutContext = () => {
