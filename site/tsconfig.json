@@ -23,10 +23,12 @@
       "@components/*": ["components/*"],
       "@commerce": ["../packages/commerce/src"],
       "@commerce/*": ["../packages/commerce/src/*"],
+      "@vercel/commerce": ["../packages/commerce/src"],
+      "@vercel/commerce/*": ["../packages/commerce/src/*"],
       "@framework": ["../packages/local/src"],
       "@framework/*": ["../packages/local/src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.d.ts", "**/*.ts", "**/*.tsx", "**/*.js"],
+  "include": ["next-env.d.ts", "**/*.d.ts", "**/*.ts", "**/*.tsx", "**/*.js", "../packages/commerce/src/**/*.ts", "../packages/commerce/src/**/*.tsx", "../packages/local/src/**/*.ts", "../packages/local/src/**/*.tsx"],
   "exclude": ["node_modules"]
 }
