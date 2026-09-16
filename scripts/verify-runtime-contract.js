@@ -40,11 +40,14 @@ if (paths['@vercel/commerce/*']?.[0] !== '../packages/commerce/src/*') {
   failures.push('tsconfig must alias @vercel/commerce/* to the maintained in-repo source');
 }
 
-if (!commerceConfig.includes("../packages/commerce/src/config.cjs")) {
-  failures.push('commerce config must load core configuration from source without a built workspace package');
+if (commerceConfig.includes("require('@vercel/commerce/config')")) {
+  failures.push('commerce config must not require the legacy built @vercel/commerce package');
 }
 if (!commerceConfig.includes("../packages/local/src/next.config.cjs")) {
   failures.push('commerce config must load the local provider Next config from source without a built workspace package');
+}
+if (!commerceConfig.includes("'@vercel/commerce': path.resolve(__dirname, '../packages/commerce/src')")) {
+  failures.push('webpack must alias @vercel/commerce to the in-repo core source');
 }
 
 for (const header of [
