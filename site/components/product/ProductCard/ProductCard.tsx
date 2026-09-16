@@ -12,7 +12,10 @@ interface Props {
   className?: string
   product: Product
   noNameTag?: boolean
-  imgProps?: Omit<ImageProps, 'src' | 'layout' | 'placeholder' | 'blurDataURL'>
+  imgProps?: Omit<
+    ImageProps,
+    'src' | 'alt' | 'layout' | 'placeholder' | 'blurDataURL'
+  >
   variant?: 'default' | 'slim' | 'simple'
 }
 
