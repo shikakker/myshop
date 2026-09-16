@@ -9,6 +9,12 @@ on:
       - package.json
       - site/package.json
       - scripts/verify-runtime-contract.js
+      - 'site/**/*.ts'
+      - 'site/**/*.tsx'
+      - 'packages/**/*.ts'
+      - 'packages/**/*.tsx'
+      - site/next.config.js
+      - site/commerce-config.js
 
 permissions:
   contents: write
