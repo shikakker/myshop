@@ -56,8 +56,14 @@ function withCommerceConfig(nextConfig = {}) {
   }
 
   Object.entries(features).forEach(([key, value]) => {
-    if (value) config.env[`COMMERCE_${key.toUpperCase()}_ENABLED`] = true
+    if (value) {
+      config.env[`COMMERCE_${key.toUpperCase()}_ENABLED`] = String(Boolean(value))
+    }
   })
+
+  // `commerce` is an internal composition key, not a supported Next.js config key.
+  // Strip it after feature/env derivation so Next can validate the final config cleanly.
+  delete config.commerce
 
   const webpack = nextConfig.webpack
   config.webpack = (webpackConfig, options) => {
