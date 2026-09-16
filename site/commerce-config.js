@@ -1,12 +1,11 @@
 /**
- * This file is expected to be used in next.config.js only
+ * Local storefront configuration used by next.config.js.
+ * The deployable app compiles the in-repo commerce sources directly so the
+ * historical provider build toolchain is not part of the production install.
  */
 
 const path = require('path')
-const fs = require('fs')
-const merge = require('deepmerge')
-const prettier = require('prettier')
-const core = require('@vercel/commerce/config')
+const providerNextConfig = require('../packages/local/src/next.config.cjs')
 
 const PROVIDERS = ['@vercel/commerce-local']
 
@@ -15,18 +14,8 @@ function getProviderName() {
 }
 
 function withCommerceConfig(nextConfig = {}) {
-  const config = merge(
-    { commerce: { provider: getProviderName() } },
-    nextConfig
-  )
-  const { commerce } = config
-  const { provider } = commerce
+  const provider = nextConfig.commerce?.provider || getProviderName()
 
-  if (!provider) {
-    throw new Error(
-      `The commerce provider is missing, please add a valid provider name or its environment variables`
-    )
-  }
   if (!PROVIDERS.includes(provider)) {
     throw new Error(
       `The commerce provider "${provider}" is not installed in this production storefront. Supported provider: "${PROVIDERS.join(
@@ -35,51 +24,54 @@ function withCommerceConfig(nextConfig = {}) {
     )
   }
 
-  // Update paths in `tsconfig.json` to point to the selected provider
-  if (commerce.updateTSConfig !== false) {
-    const tsconfigPath = path.join(
-      process.cwd(),
-      commerce.tsconfigPath || 'tsconfig.json'
-    )
-    const tsconfig = require(tsconfigPath)
-    // The module path is a symlink in node_modules
-    // -> /node_modules/[name]/dist/index.js
-    const absolutePath = require.resolve(provider)
-    // but we want references to go to the real path in /packages instead
-    // -> packages/[name]/dist
-    const distPath = path.join(path.relative(process.cwd(), absolutePath), '..')
-    // -> /packages/[name]/src
-    const modulePath = path.join(distPath, '../src')
-
-    tsconfig.compilerOptions.paths['@framework'] = [`${modulePath}`]
-    tsconfig.compilerOptions.paths['@framework/*'] = [`${modulePath}/*`]
-
-    fs.writeFileSync(
-      tsconfigPath,
-      prettier.format(JSON.stringify(tsconfig), { parser: 'json' })
-    )
-
-    const webpack = config.webpack
-
-    // To improve the DX of using references, we'll switch from `src` to `dist`
-    // only for webpack so imports resolve correctly but typechecking goes to `src`
-    config.webpack = (cfg, options) => {
-      if (Array.isArray(cfg.resolve.plugins)) {
-        const jsconfigPaths = cfg.resolve.plugins.find(
-          (plugin) => plugin.constructor.name === 'JsConfigPathsPlugin'
-        )
-
-        if (jsconfigPaths) {
-          jsconfigPaths.paths['@framework'] = [distPath]
-          jsconfigPaths.paths['@framework/*'] = [`${distPath}/*`]
-        }
-      }
-
-      return webpack ? webpack(cfg, options) : cfg
-    }
+  const providerCommerce = providerNextConfig.commerce || {}
+  const appCommerce = nextConfig.commerce || {}
+  const features = {
+    ...(providerCommerce.features || {}),
+    ...(appCommerce.features || {}),
   }
 
-  return core.withCommerceConfig(config)
+  const config = {
+    ...providerNextConfig,
+    ...nextConfig,
+    commerce: {
+      ...providerCommerce,
+      ...appCommerce,
+      provider,
+      features,
+    },
+    images: {
+      ...(providerNextConfig.images || {}),
+      ...(nextConfig.images || {}),
+    },
+    env: {
+      ...(providerNextConfig.env || {}),
+      ...(nextConfig.env || {}),
+    },
+    experimental: {
+      ...(providerNextConfig.experimental || {}),
+      ...(nextConfig.experimental || {}),
+      externalDir: true,
+    },
+  }
+
+  Object.entries(features).forEach(([key, value]) => {
+    if (value) config.env[`COMMERCE_${key.toUpperCase()}_ENABLED`] = true
+  })
+
+  const webpack = nextConfig.webpack
+  config.webpack = (webpackConfig, options) => {
+    webpackConfig.resolve.alias = {
+      ...(webpackConfig.resolve.alias || {}),
+      '@commerce': path.resolve(__dirname, '../packages/commerce/src'),
+      '@vercel/commerce': path.resolve(__dirname, '../packages/commerce/src'),
+      '@framework': path.resolve(__dirname, '../packages/local/src'),
+    }
+
+    return webpack ? webpack(webpackConfig, options) : webpackConfig
+  }
+
+  return config
 }
 
 module.exports = { withCommerceConfig, getProviderName }
