@@ -17,6 +17,34 @@ if (sitePackage.engines?.node !== '22.x') {
   failures.push('site/package.json must pin engines.node to 22.x');
 }
 
+if (sitePackage.dependencies?.next !== '15.5.24') {
+  failures.push('site must use the patched Next.js 15.5.24 runtime');
+}
+if (sitePackage.dependencies?.react !== '18.2.0' || sitePackage.dependencies?.['react-dom'] !== '18.2.0') {
+  failures.push('site must use React 18.2.0 with the migrated Next runtime');
+}
+if (sitePackage.dependencies?.['js-cookie'] !== '3.0.7') {
+  failures.push('site must use js-cookie 3.0.7 or later patched behavior');
+}
+if (sitePackage.dependencies?.postcss !== '8.5.28') {
+  failures.push('site must use patched PostCSS 8.5.28');
+}
+if (sitePackage.resolutions?.browserslist !== '4.28.7') {
+  failures.push('site must pin patched browserslist 4.28.7 across the CSS toolchain');
+}
+if (sitePackage.resolutions?.braces !== '3.0.3') {
+  failures.push('site must pin patched braces 3.0.3 across the CSS toolchain');
+}
+if (sitePackage.resolutions?.picomatch !== '2.3.2') {
+  failures.push('site must pin patched picomatch 2.3.2 across the CSS toolchain');
+}
+if (sitePackage.resolutions?.nanoid !== '3.3.18') {
+  failures.push('site must pin patched nanoid 3.3.18 across the CSS toolchain');
+}
+if (sitePackage.scripts?.lint?.includes('next lint')) {
+  failures.push('Next 15 migration must not rely on the removed next lint command');
+}
+
 if (sitePackage.dependencies?.['postcss-nesting']) {
   failures.push('site must not directly install legacy postcss-nesting; postcss-preset-env owns the compatible nesting plugin');
 }
