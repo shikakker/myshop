@@ -1,3 +1,6 @@
-import zeitFetch from '@vercel/fetch'
+const platformFetch = (
+  input: RequestInfo | URL,
+  init?: RequestInit
+): Promise<Response> => globalThis.fetch(input, init)
 
-export default zeitFetch()
+export default platformFetch
