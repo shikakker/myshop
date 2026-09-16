@@ -52,6 +52,10 @@ if (sitePackage.dependencies?.['postcss-nesting']) {
   failures.push('site must not directly install legacy postcss-nesting; postcss-preset-env owns the compatible nesting plugin');
 }
 
+if (sitePackage.dependencies?.['@vercel/fetch']) {
+  failures.push('site must use the Node 22 platform fetch instead of the obsolete @vercel/fetch wrapper');
+}
+
 if (JSON.stringify(rootPackage.workspaces) !== JSON.stringify(['site'])) {
   failures.push('production install must contain only the deployable site workspace');
 }
