@@ -7,11 +7,11 @@
 - **Canonical Vercel project:** `myshop` (`prj_dmh1zVvAphPJAlJtKgzAlxvOANKY`)
 - Vercel project root: `site`
 - Product: provider-aware commerce storefront demo / integration sandbox
-- Default provider: `@vercel/commerce-local`
+- Default provider: in-repo local demo provider
 
 ## Current batch
 
-**State:** PARTIAL — build/install root cause and P0/P1 trust/core-flow defects are fixed in source, but exact-head install/typecheck/lint/build/Vercel/browser verification is not executing yet. The project is not DONE.
+**State:** PARTIAL — repository code/build/security gates are verified on the migrated dependency graph; exact-current-head Vercel/browser delivery and real-commerce provider E2E remain release gates.
 
 **Branch:** `ai/product-completion/myshop`  
 **Base:** `main`  
@@ -19,104 +19,88 @@
 
 ## Product definition
 
-**User → Problem → Core action → Value → Outcome**
-
-Developer / portfolio reviewer / commerce integrator → needs a truthful storefront reference that can run with sample data or a configured provider → browses catalog/search/products, exercises cart, and sees whether the current provider supports checkout → understands the commerce UI/integration without mistaking demo data for real inventory/orders → can evaluate or continue provider integration safely.
-
-## Initial verified state
-
-- Historical Vercel deployment renders successfully and exposes sample local products.
-- Public metadata/footer/homepage still identify the site as ACME / Next.js Commerce and link upstream Next.js/Vercel identity.
-- Product descriptions repeat historical Next.js Conf scarcity/charity claims.
-- Local provider checkout hook is empty, but cart UI offered `Proceed to Checkout` and linked to a checkout flow that does not exist for the local provider.
-- Latest pre-fix Vercel previews fail during dependency installation because direct `postcss-nesting@8.0.1` only supports Node 12–16 while the Vercel project runs Node 22.
-- No repository CI workflow existed.
-- Vercel runtime error query for the inspected 7-day window returned no runtime error clusters on the historical deployment.
+Developer / portfolio reviewer / commerce integrator → needs a truthful storefront reference that can run with sample data or a configured provider → browses catalog/search/products, exercises cart, and sees whether the current provider supports checkout → understands the commerce UI/integration without mistaking demo data for live inventory/orders → can evaluate or continue provider integration safely.
 
 ## T01–T10 — Core tasks
 
-| ID | Status | Task / value / expected result / verification |
+| ID | Status | Task / verification |
 | --- | --- | --- |
-| T01 | DONE | Identify canonical repo/Vercel project and upstream provenance; `main` contained canonical application code, older improvement branches were docs-only. |
-| T02 | DONE | Fix Node/install root cause without disabling engine checks: root/site pin Node 22 and obsolete direct `postcss-nesting@8` is removed. Focused runtime contract RED→GREEN. |
-| T03 | IN PROGRESS | Reproducible frozen install/typecheck/lint/build. Scripts + CI added; exact-head runner/build has not executed. |
-| T04 | DONE | Make provider mode explicit to UI; `NEXT_PUBLIC_COMMERCE_PROVIDER` is generated from selected server build config. |
-| T05 | DONE | Disable fake checkout in local demo mode; cart/sidebar explain that real provider configuration is required. |
-| T06 | DONE | Replace upstream ACME/Next.js Commerce public identity, lorem and unsupported upstream claims with MyShop demo/provenance copy. |
-| T07 | DONE | Neutralize local sample catalog vendor/event/scarcity/charity claims while preserving IDs/slugs/images/variants. |
-| T08 | DONE | Fail closed for profile/orders/wishlist when corresponding provider features are disabled; improve loading/empty states. |
-| T09 | IN PROGRESS | Add deployment/security hardening and environment/docs contract; baseline headers and `.env.example` added, exact runtime response verification pending. |
-| T10 | BLOCKED | Exact-head browser QA and Vercel preview. BLOCKED ONLY BY current Vercel build-rate limit plus absence of an executing GitHub runner. |
+| T01 | DONE | Identify canonical repo/Vercel project and preserve upstream provenance. |
+| T02 | DONE | Remove the Node-22 install blocker and scope the production install to the deployable storefront. |
+| T03 | DONE | Establish deterministic contracts/install/audit/typecheck/lint/build verification and a verified lockfile refresh path. |
+| T04 | DONE | Make provider mode explicit to the UI. |
+| T05 | DONE | Disable fake checkout in local demo mode and provide an honest recovery/configuration path. |
+| T06 | DONE | Replace inherited ACME/upstream runtime identity and unsupported marketing claims with MyShop demo/provenance copy. |
+| T07 | DONE | Neutralize inherited scarcity/event/charity claims in sample catalog data. |
+| T08 | DONE | Fail closed for provider-dependent profile/orders/wishlist surfaces and improve loading/empty states. |
+| T09 | DONE | Migrate runtime to Node 22 + Next.js 15.5.24 + React 18.2, harden response headers, and clean the high/critical production dependency boundary. |
+| T10 | BLOCKED | Exact-current-head Vercel preview and 375/768/1024/1440 browser QA. BLOCKED ONLY BY hosted preview delivery/capacity on the linked project. |
 
 ## I01–I10 — Improvements
 
 | ID | Status | Improvement |
 | --- | --- | --- |
-| I01 | DONE | Node 22 runtime contract matches Vercel and repo package metadata. |
-| I02 | DONE | Runtime dependency contract prevents reintroducing Node-incompatible direct PostCSS nesting package. |
-| I03 | DONE | Product honesty contract protects provider mode, demo checkout guards, upstream identity and sample catalog semantics. |
-| I04 | DONE | GitHub CI workflow added: frozen install → contracts → typecheck → lint → build. |
-| I05 | DONE | Explicit cart loading vs empty state; disabled checkout has recovery action. |
-| I06 | DONE | Account-only routes fail closed when provider auth feature is disabled. |
-| I07 | DONE | Baseline Next.js security headers: nosniff, anti-frame, strict referrer policy, camera/mic/geolocation permissions disabled. |
-| I08 | DONE | `.env.example` contains blank provider placeholders only; no production secret added. |
-| I09 | IN PROGRESS | Dependency/security modernization: current Next.js 12/React 17 generation is legacy/EOL and requires a separately verified migration. |
-| I10 | DONE | README replaced with current product/deployment/provider/provenance documentation. |
+| I01 | DONE | Node 22 runtime contract matches repository/deployment expectations. |
+| I02 | DONE | Production workspace contains only the deployable `site`; historical provider source remains in Git without entering the install graph. |
+| I03 | DONE | Storefront compiles the in-repo commerce core/local provider source directly instead of requiring the obsolete Taskr/provider build toolchain. |
+| I04 | DONE | Permanent CI uses frozen install plus contracts, production audit, TypeScript, zero-warning ESLint and production build. |
+| I05 | DONE | Explicit cart loading/empty/demo-checkout states with recovery-oriented copy. |
+| I06 | DONE | Account-only routes fail closed when provider auth is disabled. |
+| I07 | DONE | Baseline nosniff, anti-frame, referrer-policy and permissions-policy headers. |
+| I08 | DONE | `.env.example` contains placeholders only; no production secret added. |
+| I09 | DONE | Next 15.5.24 / React 18.2 / TypeScript 5.9 migration plus patched PostCSS/js-cookie/transitive dependency graph. |
+| I10 | DONE | README/provenance/product-boundary documentation reflects the actual demo. |
 
 ## F01–F10 — Product features
 
-| ID | Status | Feature — user need — value — complexity — priority |
+| ID | Status | Feature — user need — value — priority |
 | --- | --- | --- |
-| F01 | DONE | Sample catalog browsing — evaluate storefront/product UI without external provider — M — P0. |
-| F02 | DONE | Search/category navigation — find sample/provider products — M — P1. |
-| F03 | DONE | Product detail/variants — inspect provider-normalized product model — M — P1. |
-| F04 | DONE | Cart — exercise quantities/pricing and provider cart hooks — M — P0. |
-| F05 | DONE | Explicit demo mode — prevent sample catalog/cart from being mistaken for a live store — S — P0. |
-| F06 | BLOCKED | Real checkout — complete purchase via configured provider — H — P0 for a real store, but blocked by external provider credentials/configuration. |
-| F07 | DEFERRED WITH REASON | Customer profile/orders — useful only with a provider that enables verified customer auth/order history — M — P2. |
-| F08 | DEFERRED WITH REASON | Wishlist — provider-dependent and disabled in current default config — M — P2. |
-| F09 | DONE | Provider-aware feature gates — only show supported commerce surfaces — M — P1. |
-| F10 | DEFERRED WITH REASON | Production merchandising/real inventory — requires business/catalog decisions and real provider data; sample data is intentionally retained as demo — L — P2. |
+| F01 | DONE | Sample catalog browsing — evaluate storefront/product UI without an external provider — P0. |
+| F02 | DONE | Search/category navigation — find sample/provider products — P1. |
+| F03 | DONE | Product detail/variants — inspect normalized product behavior — P1. |
+| F04 | DONE | Cart add/update/remove path — exercise pricing and local provider hooks — P0. |
+| F05 | DONE | Explicit demo mode — prevent sample data/cart from being mistaken for a live store — P0. |
+| F06 | BLOCKED | Real checkout — requires a supported external commerce provider, credentials and provider-backed E2E — P0 for a real store. |
+| F07 | DEFERRED WITH REASON | Customer profile/orders require verified provider customer auth/order history. |
+| F08 | DEFERRED WITH REASON | Wishlist remains provider-dependent and disabled in the default local configuration. |
+| F09 | DONE | Provider-aware feature gates expose only supported commerce surfaces. |
+| F10 | DEFERRED WITH REASON | Real merchandising/inventory requires business/catalog decisions and authoritative provider data. |
 
 ## Fresh verification evidence
 
-- Historical deployed homepage HTTP: **200**. It reproduces the pre-fix ACME/upstream metadata and sample catalog, so it is baseline evidence only, not current-head evidence.
-- Historical Vercel runtime error query (7-day inspected window): **no runtime error clusters found**.
-- Pre-fix Vercel build logs: **FAIL at install** with `postcss-nesting@8.0.1` engine incompatibility on Node 22; root cause identified and direct dependency removed in current branch.
-- Focused runtime dependency contract: **RED→GREEN** for root/site Node 22 pins and absence of legacy direct `postcss-nesting`.
-- Focused product honesty contract: **RED→GREEN** for provider exposure, demo checkout guards, ACME/lorem/Next.js SEO cleanup, neutral catalog semantics and fail-closed account routes.
-- Focused local catalog check: **PASS** for JSON parse, removal of upstream event/scarcity/charity vendor claims, and explicit non-purchasable demo description.
-- Current exact-head Vercel status: **FAIL BEFORE BUILD** with account `upgradeToPro=build-rate-limit`; this is not represented as a code/build failure.
-- Current GitHub workflow runs: **none registered/executed yet** for the newly added workflow; no install/typecheck/lint/build PASS is claimed.
-- Current-head browser QA: **NOT VERIFIED**.
+The first production audit on this continuation reproduced a very large inherited dependency surface: **6 critical / 87 high** findings. Production workspaces and unused provider packages were then removed from the install graph rather than suppressing audit failures. Subsequent migration moved the deployable site to **Next.js 15.5.24 / React 18.2 / Node 22**, removed the legacy `@vercel/fetch` wrapper, and pinned patched CSS/runtime transitives.
 
-## Security / reliability notes
+Guarded lock verification run **`35039842522`**, job **`104617032923`**, completed the full migration gate on code head `ed8ff1d196f78aa8e2ab15e0fb043ca3825a9cc3`:
 
-- No real provider credential is committed by this batch.
-- Local provider cannot submit an order through the UI.
-- Customer-only surfaces are hidden when provider customer auth is disabled.
-- Sample inventory no longer carries old real-world scarcity/event/charity claims.
-- App-level response headers are configured; CSP is deferred until exact-head browser/provider QA because commerce providers may require external scripts/frames.
-- Framework/dependency generation remains old (Next.js 12 / React 17); this is a known security/maintenance risk and not declared resolved.
+- source/product contracts — PASS;
+- dependency refresh/install — PASS;
+- production dependency audit — PASS: **0 critical / 0 high / 9 moderate / 0 low**;
+- TypeScript — PASS;
+- ESLint with `--max-warnings=0` — PASS;
+- Next.js production build — PASS;
+- verified `yarn.lock` commit — PASS.
 
-## External blockers
+The guarded workflow committed only the generated lockfile as `06bca7854e7221f47c8a230c99922a3ca5cf7932`. GitHub does not start normal push workflows for that `GITHUB_TOKEN` bot commit, so this documentation-only user-authored checkpoint intentionally triggers permanent CI against the already-verified frozen lockfile without changing application behavior.
 
-- **Exact-head Vercel build/preview:** BLOCKED ONLY BY the Vercel account Hobby build-rate limit; deployments are rejected before build.
-- **Exact-head GitHub CI:** BLOCKED ONLY BY absence of an executing/registered workflow run for the new branch workflow at the current checkpoint.
-- **Real checkout/orders:** BLOCKED ONLY BY selection/configuration of a supported external commerce provider plus its production credentials/business setup.
-- **Framework modernization verification:** current environment cannot safely complete/verify a major Next.js migration until full install/build/browser execution is available.
+The canonical Vercel project is connected, but its newest completion-branch deployment currently visible is an older mid-migration ERROR deployment (`dpl_5Lj83dAjkrWK77LLYFRhaKoWPxnk`, commit `7fb03ea...`). The historical `main` production deployment is READY but predates this hardening. No exact-final preview/browser PASS is inferred from those deployments.
+
+## Security / reliability boundary
+
+- No production commerce credential is committed or changed.
+- Local provider cannot submit a real order.
+- Production audit blocks high/critical dependency findings.
+- Customer-only features remain gated by provider capability.
+- CSP remains deferred until an exact hosted provider/browser pass establishes the required external script/frame origins.
+- Remaining moderate dependency findings are not represented as high/critical-clean evidence beyond the stated audit threshold.
 
 ## Project checkpoint
 
 **PROJECT:** MyShop (`shikakker/myshop`)  
-**Initial:** production-like upstream ACME identity; fake local checkout; unsupported sample claims; broken Node-22 Vercel install; no CI; legacy framework.  
-**Fixed:** Node/dependency contract, local demo checkout guard, provider mode, catalog/product identity, account feature gates, loading/empty states, response headers, CI/scripts, env/docs/provenance.  
-**Features:** catalog/search/product/cart demo; provider-aware feature gates; real checkout intentionally blocked until real provider config.  
-**Verification:** Install = NOT RUN exact head; Build = NOT RUN exact head; Typecheck = NOT RUN exact head; Lint = NOT RUN exact head; Tests = focused contracts PASS / full repo `yarn test` NOT RUN exact head; Browser QA = NOT VERIFIED; Vercel Preview = BLOCKED BEFORE BUILD; Historical runtime = 200 / no recent runtime error clusters.  
+**Initial:** inherited ACME identity, fake local checkout, unsupported product claims, broken Node-22 install, no reliable CI, Next 12/React 17 and a large vulnerable provider dependency graph.  
+**Fixed:** production-workspace boundary, source-owned local provider, Next 15/React 18 migration, high/critical dependency cleanup, React 18 type/lint fixes, provider honesty, feature gates, security headers, CI, docs and verified lockfile.  
+**Verification:** guarded contracts/install/audit/typecheck/lint/build = PASS; permanent frozen-lock CI is triggered by this checkpoint; Vercel exact-final preview/browser = NOT VERIFIED.  
 **Git:** `ai/product-completion/myshop`, draft PR #2.  
-**Remaining blockers:** exact-head Vercel/CI execution and external real-commerce provider inputs only.  
+**Remaining blockers:** hosted exact-head preview/browser QA and external real-commerce provider inputs.  
 **Status:** **PARTIAL**.
 
-## Next action when blockers clear
-
-Run `yarn install --frozen-lockfile && yarn test && yarn types && yarn workspace next-commerce lint && yarn build`, then deploy the exact head to canonical `myshop`, verify headers and `/`, search/category, product detail, cart add/update/remove, demo checkout denial, disabled account routes, 404/error states and 375/768/1024/1440 responsive behavior. Fix all failures before making PR #2 ready or promoting production.
+No merge, production promotion, provider credential mutation, live store mutation, billing action or destructive data migration has been performed.
