@@ -7,8 +7,9 @@ import useSignup from '@framework/auth/use-signup'
 
 interface Props {}
 
+type SignupError = { errors?: Array<{ message?: string }> }
+
 const SignUpView: FC<Props> = () => {
-  // Form State
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [firstName, setFirstName] = useState('')
@@ -32,25 +33,21 @@ const SignUpView: FC<Props> = () => {
     try {
       setLoading(true)
       setMessage('')
-      await signup({
-        email,
-        firstName,
-        lastName,
-        password,
-      })
-      setLoading(false)
+      await signup({ email, firstName, lastName, password })
       closeModal()
-    } catch ({ errors }) {
-      setMessage(errors[0].message)
+    } catch (error: unknown) {
+      const errors =
+        typeof error === 'object' && error !== null && 'errors' in error
+          ? (error as SignupError).errors
+          : undefined
+      setMessage(errors?.[0]?.message || 'Unable to create an account. Please try again.')
+    } finally {
       setLoading(false)
     }
   }
 
   const handleValidation = useCallback(() => {
-    // Test for Alphanumeric password
     const validPassword = /^(?=.*[a-zA-Z])(?=.*[0-9])/.test(password)
-
-    // Unable to send form unless fields are valid.
     if (dirty) {
       setDisabled(!validate(email) || password.length < 7 || !validPassword)
     }
@@ -61,17 +58,12 @@ const SignUpView: FC<Props> = () => {
   }, [handleValidation])
 
   return (
-    <form
-      onSubmit={handleSignup}
-      className="w-80 flex flex-col justify-between p-3"
-    >
+    <form onSubmit={handleSignup} className="w-80 flex flex-col justify-between p-3">
       <div className="flex justify-center pb-12 ">
         <Logo width="64px" height="64px" />
       </div>
       <div className="flex flex-col space-y-4">
-        {message && (
-          <div className="text-red border border-red p-3">{message}</div>
-        )}
+        {message && <div className="text-red border border-red p-3">{message}</div>}
         <Input placeholder="First Name" onChange={setFirstName} />
         <Input placeholder="Last Name" onChange={setLastName} />
         <Input type="email" placeholder="Email" onChange={setEmail} />
@@ -81,24 +73,17 @@ const SignUpView: FC<Props> = () => {
             <Info width="15" height="15" />
           </span>{' '}
           <span className="leading-6 text-sm">
-            <strong>Info</strong>: Passwords must be longer than 7 chars and
-            include numbers.{' '}
+            <strong>Info</strong>: Passwords must be longer than 7 chars and include numbers.{' '}
           </span>
         </span>
         <div className="pt-2 w-full flex flex-col">
-          <Button
-            variant="slim"
-            type="submit"
-            loading={loading}
-            disabled={disabled}
-          >
+          <Button variant="slim" type="submit" loading={loading} disabled={disabled}>
             Sign Up
           </Button>
         </div>
 
         <span className="pt-1 text-center text-sm">
-          <span className="text-accent-7">Do you have an account?</span>
-          {` `}
+          <span className="text-accent-7">Do you have an account?</span>{` `}
           <a
             className="text-accent-9 font-bold hover:underline cursor-pointer"
             onClick={() => setModalView('LOGIN_VIEW')}
