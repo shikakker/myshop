@@ -21,6 +21,7 @@
     "prettier": "^2.5.1"
   },
   "resolutions": {
+    "postcss": "8.5.28",
     "browserslist": "4.28.7",
     "braces": "3.0.3",
     "picomatch": "2.3.2",
