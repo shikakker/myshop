@@ -8,7 +8,7 @@ const importCwd = require('import-cwd')
 
 function withCommerceConfig(nextConfig = {}) {
   const commerce = nextConfig.commerce || {}
-  const { provider } = commerce
+  const { provider, providerConfig } = commerce
 
   if (!provider) {
     throw new Error(
@@ -16,10 +16,16 @@ function withCommerceConfig(nextConfig = {}) {
     )
   }
 
-  const commerceNextConfig = importCwd(path.posix.join(provider, 'next.config'))
-  const config = merge(nextConfig, commerceNextConfig)
+  const commerceNextConfig =
+    providerConfig || importCwd(path.posix.join(provider, 'next.config'))
+  const config = merge(commerceNextConfig, nextConfig)
+
+  if (config.commerce) {
+    delete config.commerce.providerConfig
+  }
+
   const features = merge(
-    config.commerce.features,
+    config.commerce.features || {},
     config.commerce[provider]?.features ?? {}
   )
 
