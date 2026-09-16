@@ -13,6 +13,7 @@ export default function FocusTrap({ children, focusFirst = false }: Props) {
   )
 
   useEffect(() => {
+    const returnFocusTarget = anchor.current
     let focusableTimer: ReturnType<typeof setInterval> | undefined
 
     const selectFirstFocusableEl = () => {
@@ -43,8 +44,8 @@ export default function FocusTrap({ children, focusFirst = false }: Props) {
     return () => {
       clearTimeout(focusTimer)
       if (focusableTimer) clearInterval(focusableTimer)
-      if (anchor.current instanceof HTMLElement) {
-        anchor.current.focus()
+      if (returnFocusTarget instanceof HTMLElement) {
+        returnFocusTarget.focus()
       }
     }
   }, [focusFirst])
