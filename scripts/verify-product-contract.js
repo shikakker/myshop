@@ -10,6 +10,10 @@ const home = read('site/pages/index.tsx');
 const cart = read('site/pages/cart.tsx');
 const cartSidebar = read('site/components/cart/CartSidebarView/CartSidebarView.tsx');
 const footer = read('site/components/common/Footer/Footer.tsx');
+const navbar = read('site/components/common/Navbar/Navbar.tsx');
+const productCard = read('site/components/product/ProductCard/ProductCard.tsx');
+const hero = read('site/components/ui/Hero/Hero.tsx');
+const search = read('site/components/search.tsx');
 const nextConfig = read('site/next.config.js');
 const localCatalog = read('packages/local/src/data.json');
 const orders = read('site/pages/orders.tsx');
@@ -60,6 +64,19 @@ if (/"vendor"\s*:\s*"Next\.js"|Next\.js Conf|limited edition|All proceeds will b
 
 if (!/This item is not offered for real purchase/.test(localCatalog)) {
   failures.push('local catalog descriptions must state that sample inventory is not offered for real purchase');
+}
+
+const legacyNestedLink = /<Link\b[\s\S]{0,300}?>\s*<a\b/;
+for (const [label, source] of [
+  ['navbar', navbar],
+  ['product card', productCard],
+  ['footer', footer],
+  ['hero', hero],
+  ['search filters', search],
+]) {
+  if (legacyNestedLink.test(source)) {
+    failures.push(`${label} must not render a nested anchor through legacy Next Link markup`);
+  }
 }
 
 if (failures.length) {
