@@ -29,17 +29,17 @@ if (sitePackage.dependencies?.['js-cookie'] !== '3.0.7') {
 if (sitePackage.dependencies?.postcss !== '8.5.28') {
   failures.push('site must use patched PostCSS 8.5.28');
 }
-if (sitePackage.resolutions?.browserslist !== '4.28.7') {
-  failures.push('site must pin patched browserslist 4.28.7 across the CSS toolchain');
+if (rootPackage.resolutions?.browserslist !== '4.28.7') {
+  failures.push('workspace must pin patched browserslist 4.28.7 across the CSS toolchain');
 }
-if (sitePackage.resolutions?.braces !== '3.0.3') {
-  failures.push('site must pin patched braces 3.0.3 across the CSS toolchain');
+if (rootPackage.resolutions?.braces !== '3.0.3') {
+  failures.push('workspace must pin patched braces 3.0.3 across the CSS toolchain');
 }
-if (sitePackage.resolutions?.picomatch !== '2.3.2') {
-  failures.push('site must pin patched picomatch 2.3.2 across the CSS toolchain');
+if (rootPackage.resolutions?.picomatch !== '2.3.2') {
+  failures.push('workspace must pin patched picomatch 2.3.2 across the CSS toolchain');
 }
-if (sitePackage.resolutions?.nanoid !== '3.3.18') {
-  failures.push('site must pin patched nanoid 3.3.18 across the CSS toolchain');
+if (rootPackage.resolutions?.nanoid !== '3.3.18') {
+  failures.push('workspace must pin patched nanoid 3.3.18 across the CSS toolchain');
 }
 if (sitePackage.scripts?.lint?.includes('next lint')) {
   failures.push('Next 15 migration must not rely on the removed next lint command');
