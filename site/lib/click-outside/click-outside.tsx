@@ -4,6 +4,7 @@ import React, {
   MouseEvent,
   ReactElement,
   forwardRef,
+  MutableRefObject,
 } from 'react'
 import mergeRefs from 'react-merge-refs'
 import hasParent from './has-parent'
@@ -52,7 +53,7 @@ const ClickOutside = forwardRef<any, ClickOutsideProps>(
       if (typeof child.ref === 'function') {
         child.ref(element)
       } else if (child.ref && 'current' in child.ref) {
-        child.ref.current = element
+        ;(child.ref as MutableRefObject<any>).current = element
       }
     }
 
