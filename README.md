@@ -1,8 +1,23 @@
 # MyShop Commerce Demo
 
-MyShop is a provider-aware commerce storefront derived from the historical `vercel/commerce` monorepo. The current canonical repository is `shikakker/myshop`.
+MyShop is a provider-aware commerce storefront derived from Vercel's historical `vercel/commerce` architecture. The canonical repository is `shikakker/myshop`.
 
-The default configuration is an **honest local demo**: catalog, search, product detail and cart interactions use deterministic sample data, while checkout/order submission is disabled. A real purchase flow is enabled only after a supported commerce provider and its required credentials are configured.
+The default configuration is an **honest local demo**: deterministic sample catalog data powers browsing, search, product detail and cart interactions, while real checkout/order submission stays disabled until a supported external commerce provider and valid credentials are configured.
+
+## What works in the local demo
+
+- browse the in-repo sample catalog and product details;
+- search product name, vendor and description;
+- sort by latest and price;
+- refine search by category, designer and price band;
+- see active refinements and clear them in one action;
+- switch between comfortable and compact result grids, with the preference stored locally;
+- keep up to five recent searches locally and clear that history;
+- copy/share the current search URL;
+- use cart interactions without presenting the sample cart as a real order flow;
+- fail closed on provider-dependent customer surfaces when the selected provider does not support them.
+
+The sample inventory explicitly states that it is not offered for real purchase. No production inventory, scarcity, charity, tax, shipping or order claims are inferred from the demo data.
 
 ## Product model
 
@@ -15,38 +30,29 @@ catalog / search
       |
       +-- local provider --> demo only, no order submission
       |
-      +-- configured provider --> provider checkout capability
+      +-- configured provider --> provider-specific checkout capability
 ```
 
-The UI exposes the selected provider at build time so demo mode cannot accidentally render a live checkout CTA.
+The selected provider is exposed to the UI as a read-only build-time value so local demo mode cannot accidentally present a live checkout path.
 
 ## Stack
 
-- Next.js 12 / React 17 legacy commerce architecture
-- TypeScript
+- Next.js 15.5.24 / React 18.2
+- TypeScript 5.9
 - Tailwind CSS / PostCSS
-- Turborepo + Yarn workspaces
-- Multiple `@vercel/commerce-*` provider packages
-- Vercel deployment with project root `site`
+- Yarn 1 workspaces
+- in-repo commerce core and local provider source
+- optional inherited provider adapters for external commerce systems
+- Vercel, project root `site`
 - Node.js 22 runtime contract
 
-The Next.js 12 architecture is legacy/EOL technical debt and should be upgraded in a dedicated verified migration. This completion batch does not hide that risk by disabling engine or build checks.
+## Default provider
 
-## Default behavior
+Without external environment variables, `site/commerce-config.js` selects the in-repo local commerce provider. It uses deterministic sample products and local cart behavior.
 
-Without external environment variables, `site/commerce-config.js` selects:
+Customer profile, orders and wishlist routes fail closed when the selected provider does not enable the corresponding capability. Real provider behavior is not considered verified merely because an adapter exists in the repository.
 
-```text
-@vercel/commerce-local
-```
-
-Local mode provides sample products and cart behavior. The sample catalog is labeled `MyShop Demo`; product descriptions explicitly state that items are not offered for real purchase. Taxes/shipping are not represented as real charges, and checkout is disabled.
-
-Customer profile/orders/wishlist routes fail closed when the selected provider does not enable the corresponding feature.
-
-## Supported provider configuration
-
-The inherited provider architecture can select supported adapters such as BigCommerce, Shopify, Swell, Saleor, Vendure, Spree, OrderCloud, Kibo, Commerce.js and others included in the monorepo.
+## External provider configuration
 
 Copy the example file:
 
@@ -54,24 +60,24 @@ Copy the example file:
 cp site/.env.example site/.env.local
 ```
 
-Set only the provider and credentials you actually use. Never commit real credentials. `site/.env.example` contains blank placeholders only.
+Set only the provider and credentials you actually use. Never commit real credentials. `site/.env.example` contains placeholders only.
 
-A provider integration is not considered production-ready merely because its adapter package exists: checkout, auth, orders and provider-specific API behavior still require current credentials and runtime verification.
+Checkout, customer authentication, orders, provider webhooks and authoritative inventory still require provider-specific credentials and E2E verification before production use.
 
 ## Local development
 
 Requirements:
 
 - Node.js 22.x
-- Yarn 1.x (`packageManager: yarn@1.22.17`)
+- Yarn 1.x
 
-Install from the monorepo root:
+Install from the repository root:
 
 ```bash
 yarn install --frozen-lockfile
 ```
 
-Run development mode from the root so workspace provider packages build/watch correctly:
+Run development mode:
 
 ```bash
 yarn dev
@@ -79,7 +85,7 @@ yarn dev
 
 ## Verification
 
-Run from the monorepo root:
+Run from the repository root:
 
 ```bash
 yarn test
@@ -88,29 +94,34 @@ yarn workspace next-commerce lint
 yarn build
 ```
 
-`yarn test` currently checks two critical repository contracts:
+`yarn test` contains blocking source contracts for runtime/dependency boundaries and product honesty. The product contract also guards the functional local-search path, search discovery controls, typed provider boundary, current Next Link markup and removal of unsafe product-variant casts.
 
-- runtime dependency contract — root/site Node 22 pins and removal of the obsolete Node-16-only direct `postcss-nesting@8` dependency;
-- product honesty contract — no upstream ACME/lorem identity, explicit provider mode, demo-checkout guards, fail-closed account routes and neutral sample catalog claims.
+GitHub Actions performs:
 
-GitHub Actions runs frozen install → contracts → TypeScript → site lint → production build.
+```text
+contracts -> frozen install -> production audit -> TypeScript -> zero-warning lint -> production build
+```
+
+The production audit blocks critical/high findings. Moderate transitive findings remain visible rather than being silently ignored.
 
 ## Deployment
 
 Canonical Vercel project: `myshop` (`prj_dmh1zVvAphPJAlJtKgzAlxvOANKY`) with project root `site`.
 
-The historical production/preview deployment is reachable and proves the inherited storefront can render, but it still contains the old ACME/Next.js Commerce identity and must not be used as evidence for the current branch.
+The product-completion branch is `ai/product-completion/myshop`, tracked by Draft PR #2. Current branch previews are built from Git and must match the branch Git SHA before they are used as verification evidence.
 
-The current product-completion branch is `ai/product-completion/myshop`. At the current checkpoint, new Vercel previews are being rejected **before build** by the account's Hobby build-rate limit. This is tracked in `PRODUCT_COMPLETION_STATUS.md`; no current-head Vercel/build PASS is claimed until execution resumes.
+Production is not automatically promoted from this workstream.
 
-## Security and trust constraints
+## Security and trust boundaries
 
-- No provider credentials are committed.
-- Local mode cannot submit an order.
-- Disabled auth/account features fail closed instead of showing empty fake account surfaces.
-- Sample catalog data does not repeat old limited-edition, event, scarcity or charity claims from the upstream starter.
-- Provider-specific checkout must be verified with current credentials before production use.
-- The framework generation is legacy; dependency/security upgrade work remains a release concern until a verified Next.js migration is completed.
+- no provider credentials are committed;
+- local mode cannot submit a real order;
+- account-only features fail closed when unsupported;
+- production dependency audit blocks high/critical findings;
+- CI GitHub token is read-only;
+- baseline anti-sniffing, frame, referrer and permissions headers are configured;
+- local search history and grid-density preferences stay in browser storage;
+- provider checkout/auth still require current real-provider verification.
 
 ## Provenance
 
@@ -122,4 +133,4 @@ That provenance is intentionally retained. MyShop does not claim the inherited c
 
 ## Status
 
-See `PRODUCT_COMPLETION_STATUS.md` for the 10 core tasks, 10 improvements, 10 feature decisions, verification evidence, blockers and next action.
+See `PRODUCT_COMPLETION_STATUS.md` for the current 10 core tasks, 10 product features, 10 design/UX improvements, verification evidence and remaining external blockers.
