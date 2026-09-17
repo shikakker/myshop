@@ -21,8 +21,25 @@ const normalizeProduct = (product: LocalCatalogProduct): Product => ({
     url: image.url,
     alt: image.altText,
   })),
-  variants: product.variants,
-  options: product.options,
+  variants: product.variants.map((variant) => ({
+    id: variant.id,
+    options: variant.options.map((option) => ({
+      __typename: 'MultipleChoiceOption',
+      id: option.id,
+      displayName: option.displayName,
+      values: option.values.map((value) => ({ label: value.label })),
+    })),
+  })),
+  options: product.options.map((option) => ({
+    id: option.id,
+    displayName: option.displayName,
+    values: option.values.map((value) => ({
+      label: value.label,
+      ...('hexColors' in value && value.hexColors
+        ? { hexColors: value.hexColors }
+        : {}),
+    })),
+  })),
 })
 
 const products = catalog.products.map(normalizeProduct)
