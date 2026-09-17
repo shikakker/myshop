@@ -16,35 +16,39 @@ const Searchbar: FC<Props> = ({ className, id = 'search' }) => {
   }, [router])
 
   const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter') return
+
     e.preventDefault()
+    const q = e.currentTarget.value.trim()
 
-    if (e.key === 'Enter') {
-      const q = e.currentTarget.value
-
-      router.push(
-        {
-          pathname: `/search`,
-          query: q ? { q } : {},
-        },
-        undefined,
-        { shallow: true }
-      )
-    }
+    router.push(
+      {
+        pathname: '/search',
+        query: q ? { q } : {},
+      },
+      undefined,
+      { shallow: true }
+    )
   }
 
   return (
-    <div className={cn(s.root, className)}>
-      <label className="hidden" htmlFor={id}>
-        Search
+    <div className={cn(s.root, className)} role="search">
+      <label className="sr-only" htmlFor={id}>
+        Search products
       </label>
       <input
         id={id}
         className={s.input}
-        placeholder="Search for products..."
-        defaultValue={router.query.q}
+        type="search"
+        inputMode="search"
+        enterKeyHint="search"
+        autoComplete="off"
+        aria-label="Search products"
+        placeholder="Search products"
+        defaultValue={typeof router.query.q === 'string' ? router.query.q : ''}
         onKeyUp={handleKeyUp}
       />
-      <div className={s.iconContainer}>
+      <div className={s.iconContainer} aria-hidden="true">
         <svg className={s.icon} fill="currentColor" viewBox="0 0 20 20">
           <path
             fillRule="evenodd"
