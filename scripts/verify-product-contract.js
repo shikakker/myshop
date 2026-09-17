@@ -15,6 +15,7 @@ const productCard = read('site/components/product/ProductCard/ProductCard.tsx');
 const hero = read('site/components/ui/Hero/Hero.tsx');
 const search = read('site/components/search.tsx');
 const searchbar = read('site/components/common/Searchbar/Searchbar.tsx');
+const searchProps = read('site/lib/search-props.tsx');
 const localSearch = read('packages/local/src/product/use-search.tsx');
 const nextConfig = read('site/next.config.js');
 const localCatalog = read('packages/local/src/data.json');
@@ -96,8 +97,21 @@ for (const [label, pattern] of searchExperienceRequirements) {
   if (!pattern.test(search)) failures.push(`search experience must ${label}`);
 }
 
+const searchTypeBoundaryRequirements = [
+  ['define a structural search brand edge type', /type SearchBrandEdge/],
+  ['validate provider brand data at the page boundary', /normalizeBrands/],
+  ['narrow unknown provider records without any', /Record<string, unknown>/],
+];
+for (const [label, pattern] of searchTypeBoundaryRequirements) {
+  if (!pattern.test(searchProps)) failures.push(`search props must ${label}`);
+}
+
 if (!/aria-label="Search products"/.test(searchbar)) {
   failures.push('search input must expose a durable accessible name without relying on a visually hidden label implementation');
+}
+
+if (/product\.variants[^\n]+as any|variant=\{[^\n]+as any/.test(productCard)) {
+  failures.push('product card must not bypass variant typing with an any cast');
 }
 
 const legacyNestedLink = /<Link\b[\s\S]{0,300}?>\s*<a\b/;
