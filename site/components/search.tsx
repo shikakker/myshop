@@ -7,6 +7,7 @@ import { useRouter } from 'next/router'
 import { Layout } from '@components/common'
 import { ProductCard } from '@components/product'
 import type { Product } from '@commerce/types/product'
+import type { Category } from '@commerce/types/site'
 import { Container, Skeleton } from '@components/ui'
 
 import useSearch from '@framework/product/use-search'
@@ -57,7 +58,9 @@ export default function Search({ categories, brands }: SearchPropsType) {
   const sortKey = typeof sort === 'string' ? sort : ''
 
   const { pathname, category, brand } = useSearchMeta(asPath)
-  const activeCategory = categories.find((cat) => cat.slug === category)
+  const activeCategory = categories.find(
+    (cat: Category) => cat.slug === category
+  )
   const activeBrand = brands.find(
     ({ node }) => getSlug(node.path) === `brands/${brand}`
   )?.node
@@ -117,7 +120,10 @@ export default function Search({ categories, brands }: SearchPropsType) {
   }, [searchQuery])
 
   const visibleProducts = useMemo(
-    () => (data?.products || []).filter((product) => matchesPrice(product, priceFilter)),
+    () =>
+      (data?.products || []).filter((product: Product) =>
+        matchesPrice(product, priceFilter)
+      ),
     [data?.products, priceFilter]
   )
 
@@ -242,7 +248,7 @@ export default function Search({ categories, brands }: SearchPropsType) {
               }
             >
               <option value="">All categories</option>
-              {categories.map((cat) => (
+              {categories.map((cat: Category) => (
                 <option key={cat.path} value={cat.path}>
                   {cat.name}
                 </option>
