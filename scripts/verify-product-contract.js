@@ -14,6 +14,8 @@ const navbar = read('site/components/common/Navbar/Navbar.tsx');
 const productCard = read('site/components/product/ProductCard/ProductCard.tsx');
 const hero = read('site/components/ui/Hero/Hero.tsx');
 const search = read('site/components/search.tsx');
+const searchbar = read('site/components/common/Searchbar/Searchbar.tsx');
+const localSearch = read('packages/local/src/product/use-search.tsx');
 const nextConfig = read('site/next.config.js');
 const localCatalog = read('packages/local/src/data.json');
 const orders = read('site/pages/orders.tsx');
@@ -64,6 +66,38 @@ if (/"vendor"\s*:\s*"Next\.js"|Next\.js Conf|limited edition|All proceeds will b
 
 if (!/This item is not offered for real purchase/.test(localCatalog)) {
   failures.push('local catalog descriptions must state that sample inventory is not offered for real purchase');
+}
+
+const localSearchRequirements = [
+  ['use the local catalog instead of returning a permanently empty result', /data\.json/],
+  ['normalize local image alt text for ProductCard', /altText/],
+  ['filter products by the search term', /includes\(normalizedSearch\)/],
+  ['support low-to-high price sorting', /price-asc/],
+  ['support high-to-low price sorting', /price-desc/],
+  ['return an explicit found state', /found:\s*products\.length\s*>\s*0/],
+];
+for (const [label, pattern] of localSearchRequirements) {
+  if (!pattern.test(localSearch)) failures.push(`local search must ${label}`);
+}
+
+const searchExperienceRequirements = [
+  ['offer price refinements', /PRICE_FILTERS/],
+  ['offer a clear-refinements action', /clearRefinements/],
+  ['persist a grid-density preference', /myshop:grid-density/],
+  ['remember recent search queries locally', /myshop:recent-searches/],
+  ['offer a share/copy-search action', /copySearchLink/],
+  ['announce result changes accessibly', /aria-live="polite"/],
+  ['expose loading state to assistive technology', /aria-busy=/],
+  ['render active refinement chips', /activeRefinements/],
+  ['support compact and comfortable product grids', /gridDensity/],
+  ['provide a recovery action for empty refined results', /Clear refinements/],
+];
+for (const [label, pattern] of searchExperienceRequirements) {
+  if (!pattern.test(search)) failures.push(`search experience must ${label}`);
+}
+
+if (!/aria-label="Search products"/.test(searchbar)) {
+  failures.push('search input must expose a durable accessible name without relying on a visually hidden label implementation');
 }
 
 const legacyNestedLink = /<Link\b[\s\S]{0,300}?>\s*<a\b/;
