@@ -2,6 +2,7 @@ import cn from 'clsx'
 import s from './Layout.module.css'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
+import type { ReactNode } from 'react'
 import { CommerceProvider } from '@framework'
 import LoginView from '@components/auth/LoginView'
 import { useUI } from '@components/ui/context'
@@ -49,6 +50,7 @@ const Modal = dynamic(() => import('@components/ui/Modal'), {
 })
 
 interface Props {
+  children?: ReactNode
   pageProps: {
     pages?: Page[]
     categories: Category[]

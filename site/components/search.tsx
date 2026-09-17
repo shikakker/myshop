@@ -1,25 +1,19 @@
 import cn from 'clsx'
 import type { SearchPropsType } from '@lib/search-props'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/router'
 
 import { Layout } from '@components/common'
 import { ProductCard } from '@components/product'
 import type { Product } from '@commerce/types/product'
+import type { Category } from '@commerce/types/site'
 import { Container, Skeleton } from '@components/ui'
 
 import useSearch from '@framework/product/use-search'
 
 import getSlug from '@lib/get-slug'
 import rangeMap from '@lib/range-map'
-
-const SORT = {
-  'trending-desc': 'Trending',
-  'latest-desc': 'Latest arrivals',
-  'price-asc': 'Price: Low to high',
-  'price-desc': 'Price: High to low',
-}
 
 import {
   filterQuery,
@@ -28,410 +22,392 @@ import {
   useSearchMeta,
 } from '@lib/search'
 
-export default function Search({ categories, brands }: SearchPropsType) {
-  const [activeFilter, setActiveFilter] = useState('')
-  const [toggleFilter, setToggleFilter] = useState(false)
+const SORT = {
+  'trending-desc': 'Trending',
+  'latest-desc': 'Latest arrivals',
+  'price-asc': 'Price: Low to high',
+  'price-desc': 'Price: High to low',
+} as const
 
+const PRICE_FILTERS = {
+  all: 'Any price',
+  'under-50': 'Under $50',
+  '50-200': '$50–$200',
+  '200-plus': '$200+',
+} as const
+
+type PriceFilter = keyof typeof PRICE_FILTERS
+type GridDensity = 'comfortable' | 'compact'
+
+const RECENT_SEARCHES_KEY = 'myshop:recent-searches'
+const GRID_DENSITY_KEY = 'myshop:grid-density'
+
+const matchesPrice = (product: Product, filter: PriceFilter) => {
+  const value = product.price.value
+  if (filter === 'under-50') return value < 50
+  if (filter === '50-200') return value >= 50 && value < 200
+  if (filter === '200-plus') return value >= 200
+  return true
+}
+
+export default function Search({ categories, brands }: SearchPropsType) {
   const router = useRouter()
   const { asPath, locale } = router
   const { q, sort } = router.query
-  // `q` can be included but because categories and designers can't be searched
-  // in the same way of products, it's better to ignore the search input if one
-  // of those is selected
-  const query = filterQuery({ sort })
+  const searchQuery = typeof q === 'string' ? q.trim() : ''
+  const sortKey = typeof sort === 'string' ? sort : ''
 
   const { pathname, category, brand } = useSearchMeta(asPath)
-  const activeCategory = categories.find((cat: any) => cat.slug === category)
+  const activeCategory = categories.find(
+    (cat: Category) => cat.slug === category
+  )
   const activeBrand = brands.find(
-    (b: any) => getSlug(b.node.path) === `brands/${brand}`
+    ({ node }) => getSlug(node.path) === `brands/${brand}`
   )?.node
 
+  const [priceFilter, setPriceFilter] = useState<PriceFilter>('all')
+  const [gridDensity, setGridDensity] = useState<GridDensity>('comfortable')
+  const [recentSearches, setRecentSearches] = useState<string[]>([])
+  const [shareStatus, setShareStatus] = useState('')
+
   const { data } = useSearch({
-    search: typeof q === 'string' ? q : '',
+    search: searchQuery,
     categoryId: activeCategory?.id,
-    brandId: (activeBrand as any)?.entityId,
-    sort: typeof sort === 'string' ? sort : '',
+    brandId: activeBrand?.entityId,
+    sort: sortKey,
     locale,
   })
 
-  const handleClick = (event: any, filter: string) => {
-    if (filter !== activeFilter) {
-      setToggleFilter(true)
-    } else {
-      setToggleFilter(!toggleFilter)
+  useEffect(() => {
+    try {
+      const storedDensity = window.localStorage.getItem(GRID_DENSITY_KEY)
+      if (storedDensity === 'compact' || storedDensity === 'comfortable') {
+        setGridDensity(storedDensity)
+      }
+
+      const storedSearches = JSON.parse(
+        window.localStorage.getItem(RECENT_SEARCHES_KEY) || '[]'
+      )
+      if (Array.isArray(storedSearches)) {
+        setRecentSearches(
+          storedSearches.filter((value) => typeof value === 'string').slice(0, 5)
+        )
+      }
+    } catch {
+      // Storage is an enhancement; search remains functional when it is blocked.
     }
-    setActiveFilter(filter)
+  }, [])
+
+  useEffect(() => {
+    if (!searchQuery) return
+
+    setRecentSearches((current) => {
+      const next = [
+        searchQuery,
+        ...current.filter(
+          (value) => value.toLocaleLowerCase() !== searchQuery.toLocaleLowerCase()
+        ),
+      ].slice(0, 5)
+
+      try {
+        window.localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(next))
+      } catch {
+        // Keep the in-memory experience when storage is unavailable.
+      }
+
+      return next
+    })
+  }, [searchQuery])
+
+  const visibleProducts = useMemo(
+    () =>
+      (data?.products || []).filter((product: Product) =>
+        matchesPrice(product, priceFilter)
+      ),
+    [data?.products, priceFilter]
+  )
+
+  const activeRefinements = useMemo(() => {
+    const refinements: string[] = []
+    if (activeCategory?.name) refinements.push(`Category: ${activeCategory.name}`)
+    if (activeBrand?.name) refinements.push(`Designer: ${activeBrand.name}`)
+    if (sortKey && SORT[sortKey as keyof typeof SORT]) {
+      refinements.push(`Sort: ${SORT[sortKey as keyof typeof SORT]}`)
+    }
+    if (priceFilter !== 'all') refinements.push(`Price: ${PRICE_FILTERS[priceFilter]}`)
+    return refinements
+  }, [activeBrand?.name, activeCategory?.name, priceFilter, sortKey])
+
+  const setDensity = (density: GridDensity) => {
+    setGridDensity(density)
+    try {
+      window.localStorage.setItem(GRID_DENSITY_KEY, density)
+    } catch {
+      // Preference persistence is optional.
+    }
   }
+
+  const clearRecentSearches = () => {
+    setRecentSearches([])
+    try {
+      window.localStorage.removeItem(RECENT_SEARCHES_KEY)
+    } catch {
+      // In-memory state is already cleared.
+    }
+  }
+
+  const clearRefinements = () => {
+    setPriceFilter('all')
+    router.push(
+      {
+        pathname: '/search',
+        query: filterQuery({ q: searchQuery || undefined }),
+      },
+      undefined,
+      { shallow: true }
+    )
+  }
+
+  const copySearchLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href)
+      setShareStatus('Search link copied')
+    } catch {
+      setShareStatus('Copy is unavailable in this browser')
+    }
+  }
+
+  const resultLabel = data
+    ? `${visibleProducts.length} ${visibleProducts.length === 1 ? 'product' : 'products'}`
+    : 'Loading products'
 
   return (
     <Container>
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-3 mb-20">
-        <div className="col-span-8 lg:col-span-2 order-1 lg:order-none">
-          {/* Categories */}
-          <div className="relative inline-block w-full">
-            <div className="lg:hidden">
-              <span className="rounded-md shadow-sm">
+      <section className="mt-6 mb-20" aria-busy={!data}>
+        <header className="mb-6 border-b border-accent-2 pb-6">
+          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-accent-5">
+                Catalog
+              </p>
+              <h1 className="mt-1 text-2xl font-semibold text-accent-9 md:text-3xl">
+                {searchQuery ? `Results for “${searchQuery}”` : 'Browse products'}
+              </h1>
+              <p className="mt-2 text-sm text-accent-5" aria-live="polite">
+                {resultLabel}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={copySearchLink}
+                className="min-h-11 rounded-md border border-accent-3 px-4 py-2 text-sm font-medium text-accent-8 hover:border-accent-5 focus:outline-none focus:ring-2 focus:ring-accent-7"
+              >
+                Share search
+              </button>
+              <div className="inline-flex rounded-md border border-accent-3 p-1" aria-label="Product grid density">
                 <button
                   type="button"
-                  onClick={(e) => handleClick(e, 'categories')}
-                  className="flex justify-between w-full rounded-sm border border-accent-3 px-4 py-3 bg-accent-0 text-sm leading-5 font-medium text-accent-4 hover:text-accent-5 focus:outline-none focus:border-blue-300 focus:shadow-outline-normal active:bg-accent-1 active:text-accent-8 transition ease-in-out duration-150"
-                  id="options-menu"
-                  aria-haspopup="true"
-                  aria-expanded="true"
+                  aria-pressed={gridDensity === 'comfortable'}
+                  onClick={() => setDensity('comfortable')}
+                  className={cn('min-h-9 rounded px-3 text-sm', {
+                    'bg-accent-9 text-accent-0': gridDensity === 'comfortable',
+                  })}
                 >
-                  {activeCategory?.name
-                    ? `Category: ${activeCategory?.name}`
-                    : 'All Categories'}
-                  <svg
-                    className="-mr-1 ml-2 h-5 w-5"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                  Comfortable
                 </button>
-              </span>
-            </div>
-            <div
-              className={`origin-top-left absolute lg:relative left-0 mt-2 w-full rounded-md shadow-lg lg:shadow-none z-10 mb-10 lg:block ${
-                activeFilter !== 'categories' || toggleFilter !== true
-                  ? 'hidden'
-                  : ''
-              }`}
-            >
-              <div className="rounded-sm bg-accent-0 shadow-xs lg:bg-none lg:shadow-none">
-                <div
-                  role="menu"
-                  aria-orientation="vertical"
-                  aria-labelledby="options-menu"
+                <button
+                  type="button"
+                  aria-pressed={gridDensity === 'compact'}
+                  onClick={() => setDensity('compact')}
+                  className={cn('min-h-9 rounded px-3 text-sm', {
+                    'bg-accent-9 text-accent-0': gridDensity === 'compact',
+                  })}
                 >
-                  <ul>
-                    <li
-                      className={cn(
-                        'block text-sm leading-5 text-accent-4 lg:text-base lg:no-underline lg:font-bold lg:tracking-wide hover:bg-accent-1 lg:hover:bg-transparent hover:text-accent-8 focus:outline-none focus:bg-accent-1 focus:text-accent-8',
-                        {
-                          underline: !activeCategory?.name,
-                        }
-                      )}
-                    >
-                      <Link
-                        href={{ pathname: getCategoryPath('', brand), query }}
-                      >
-                        <a
-                          onClick={(e) => handleClick(e, 'categories')}
-                          className={
-                            'block lg:inline-block px-4 py-2 lg:p-0 lg:my-2 lg:mx-4'
-                          }
-                        >
-                          All Categories
-                        </a>
-                      </Link>
-                    </li>
-                    {categories.map((cat: any) => (
-                      <li
-                        key={cat.path}
-                        className={cn(
-                          'block text-sm leading-5 text-accent-4 hover:bg-accent-1 lg:hover:bg-transparent hover:text-accent-8 focus:outline-none focus:bg-accent-1 focus:text-accent-8',
-                          {
-                            underline: activeCategory?.id === cat.id,
-                          }
-                        )}
-                      >
-                        <Link
-                          href={{
-                            pathname: getCategoryPath(cat.path, brand),
-                            query,
-                          }}
-                        >
-                          <a
-                            onClick={(e) => handleClick(e, 'categories')}
-                            className={
-                              'block lg:inline-block px-4 py-2 lg:p-0 lg:my-2 lg:mx-4'
-                            }
-                          >
-                            {cat.name}
-                          </a>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                  Compact
+                </button>
               </div>
             </div>
           </div>
+          <p className="mt-2 min-h-5 text-sm text-accent-5" aria-live="polite">
+            {shareStatus}
+          </p>
+        </header>
 
-          {/* Designs */}
-          <div className="relative inline-block w-full">
-            <div className="lg:hidden mt-3">
-              <span className="rounded-md shadow-sm">
-                <button
-                  type="button"
-                  onClick={(e) => handleClick(e, 'brands')}
-                  className="flex justify-between w-full rounded-sm border border-accent-3 px-4 py-3 bg-accent-0 text-sm leading-5 font-medium text-accent-8 hover:text-accent-5 focus:outline-none focus:border-blue-300 focus:shadow-outline-normal active:bg-accent-1 active:text-accent-8 transition ease-in-out duration-150"
-                  id="options-menu"
-                  aria-haspopup="true"
-                  aria-expanded="true"
-                >
-                  {activeBrand?.name
-                    ? `Design: ${activeBrand?.name}`
-                    : 'All Designs'}
-                  <svg
-                    className="-mr-1 ml-2 h-5 w-5"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </button>
-              </span>
-            </div>
-            <div
-              className={`origin-top-left absolute lg:relative left-0 mt-2 w-full rounded-md shadow-lg lg:shadow-none z-10 mb-10 lg:block ${
-                activeFilter !== 'brands' || toggleFilter !== true
-                  ? 'hidden'
-                  : ''
-              }`}
+        <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <label className="text-sm font-medium text-accent-8">
+            Category
+            <select
+              className="mt-1 min-h-11 w-full rounded-md border border-accent-3 bg-accent-0 px-3"
+              value={activeCategory?.path || ''}
+              onChange={(event) =>
+                router.push({
+                  pathname: getCategoryPath(event.target.value, brand),
+                  query: filterQuery({ q: searchQuery, sort: sortKey }),
+                })
+              }
             >
-              <div className="rounded-sm bg-accent-0 shadow-xs lg:bg-none lg:shadow-none">
-                <div
-                  role="menu"
-                  aria-orientation="vertical"
-                  aria-labelledby="options-menu"
-                >
-                  <ul>
-                    <li
-                      className={cn(
-                        'block text-sm leading-5 text-accent-4 lg:text-base lg:no-underline lg:font-bold lg:tracking-wide hover:bg-accent-1 lg:hover:bg-transparent hover:text-accent-8 focus:outline-none focus:bg-accent-1 focus:text-accent-8',
-                        {
-                          underline: !activeBrand?.name,
-                        }
-                      )}
-                    >
-                      <Link
-                        href={{
-                          pathname: getDesignerPath('', category),
-                          query,
-                        }}
-                      >
-                        <a
-                          onClick={(e) => handleClick(e, 'brands')}
-                          className={
-                            'block lg:inline-block px-4 py-2 lg:p-0 lg:my-2 lg:mx-4'
-                          }
-                        >
-                          All Designers
-                        </a>
-                      </Link>
-                    </li>
-                    {brands.flatMap(({ node }: { node: any }) => (
-                      <li
-                        key={node.path}
-                        className={cn(
-                          'block text-sm leading-5 text-accent-4 hover:bg-accent-1 lg:hover:bg-transparent hover:text-accent-8 focus:outline-none focus:bg-accent-1 focus:text-accent-8',
-                          {
-                            // @ts-ignore Shopify - Fix this types
-                            underline: activeBrand?.entityId === node.entityId,
-                          }
-                        )}
-                      >
-                        <Link
-                          href={{
-                            pathname: getDesignerPath(node.path, category),
-                            query,
-                          }}
-                        >
-                          <a
-                            onClick={(e) => handleClick(e, 'brands')}
-                            className={
-                              'block lg:inline-block px-4 py-2 lg:p-0 lg:my-2 lg:mx-4'
-                            }
-                          >
-                            {node.name}
-                          </a>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        {/* Products */}
-        <div className="col-span-8 order-3 lg:order-none">
-          {(q || activeCategory || activeBrand) && (
-            <div className="mb-12 transition ease-in duration-75">
-              {data ? (
-                <>
-                  <span
-                    className={cn('animated', {
-                      fadeIn: data.found,
-                      hidden: !data.found,
-                    })}
-                  >
-                    Showing {data.products.length} results{' '}
-                    {q && (
-                      <>
-                        for "<strong>{q}</strong>"
-                      </>
-                    )}
-                  </span>
-                  <span
-                    className={cn('animated', {
-                      fadeIn: !data.found,
-                      hidden: data.found,
-                    })}
-                  >
-                    {q ? (
-                      <>
-                        There are no products that match "<strong>{q}</strong>"
-                      </>
-                    ) : (
-                      <>
-                        There are no products that match the selected category.
-                      </>
-                    )}
-                  </span>
-                </>
-              ) : q ? (
-                <>
-                  Searching for: "<strong>{q}</strong>"
-                </>
-              ) : (
-                <>Searching...</>
-              )}
-            </div>
-          )}
-          {data ? (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {data.products.map((product: Product) => (
-                <ProductCard
-                  variant="simple"
-                  key={product.path}
-                  className="animated fadeIn"
-                  product={product}
-                  imgProps={{
-                    width: 480,
-                    height: 480,
-                  }}
-                />
+              <option value="">All categories</option>
+              {categories.map((cat: Category) => (
+                <option key={cat.path} value={cat.path}>
+                  {cat.name}
+                </option>
               ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {rangeMap(12, (i) => (
-                <Skeleton key={i}>
-                  <div className="w-60 h-60" />
-                </Skeleton>
+            </select>
+          </label>
+
+          <label className="text-sm font-medium text-accent-8">
+            Designer
+            <select
+              className="mt-1 min-h-11 w-full rounded-md border border-accent-3 bg-accent-0 px-3"
+              value={activeBrand?.path || ''}
+              onChange={(event) =>
+                router.push({
+                  pathname: getDesignerPath(event.target.value, category),
+                  query: filterQuery({ q: searchQuery, sort: sortKey }),
+                })
+              }
+            >
+              <option value="">All designers</option>
+              {brands.map(({ node }) => (
+                <option key={node.path} value={node.path}>
+                  {node.name}
+                </option>
               ))}
-            </div>
-          )}{' '}
+            </select>
+          </label>
+
+          <label className="text-sm font-medium text-accent-8">
+            Sort
+            <select
+              className="mt-1 min-h-11 w-full rounded-md border border-accent-3 bg-accent-0 px-3"
+              value={sortKey}
+              onChange={(event) =>
+                router.push({
+                  pathname,
+                  query: filterQuery({ q: searchQuery, sort: event.target.value }),
+                })
+              }
+            >
+              <option value="">Relevance</option>
+              {Object.entries(SORT).map(([key, text]) => (
+                <option key={key} value={key}>
+                  {text}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="text-sm font-medium text-accent-8">
+            Price
+            <select
+              className="mt-1 min-h-11 w-full rounded-md border border-accent-3 bg-accent-0 px-3"
+              value={priceFilter}
+              onChange={(event) => setPriceFilter(event.target.value as PriceFilter)}
+            >
+              {Object.entries(PRICE_FILTERS).map(([key, text]) => (
+                <option key={key} value={key}>
+                  {text}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
 
-        {/* Sort */}
-        <div className="col-span-8 lg:col-span-2 order-2 lg:order-none">
-          <div className="relative inline-block w-full">
-            <div className="lg:hidden">
-              <span className="rounded-md shadow-sm">
-                <button
-                  type="button"
-                  onClick={(e) => handleClick(e, 'sort')}
-                  className="flex justify-between w-full rounded-sm border border-accent-3 px-4 py-3 bg-accent-0 text-sm leading-5 font-medium text-accent-4 hover:text-accent-5 focus:outline-none focus:border-blue-300 focus:shadow-outline-normal active:bg-accent-1 active:text-accent-8 transition ease-in-out duration-150"
-                  id="options-menu"
-                  aria-haspopup="true"
-                  aria-expanded="true"
-                >
-                  {sort ? SORT[sort as keyof typeof SORT] : 'Relevance'}
-                  <svg
-                    className="-mr-1 ml-2 h-5 w-5"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </button>
+        {activeRefinements.length > 0 && (
+          <div className="mb-6 flex flex-wrap items-center gap-2" aria-label="Active refinements">
+            {activeRefinements.map((refinement) => (
+              <span
+                key={refinement}
+                className="rounded-full bg-accent-1 px-3 py-1.5 text-sm text-accent-8"
+              >
+                {refinement}
               </span>
-            </div>
-            <div
-              className={`origin-top-left absolute lg:relative left-0 mt-2 w-full rounded-md shadow-lg lg:shadow-none z-10 mb-10 lg:block ${
-                activeFilter !== 'sort' || toggleFilter !== true ? 'hidden' : ''
-              }`}
+            ))}
+            <button
+              type="button"
+              onClick={clearRefinements}
+              className="min-h-9 rounded-full border border-accent-3 px-3 text-sm font-medium hover:border-accent-5 focus:outline-none focus:ring-2 focus:ring-accent-7"
             >
-              <div className="rounded-sm bg-accent-0 shadow-xs lg:bg-none lg:shadow-none">
-                <div
-                  role="menu"
-                  aria-orientation="vertical"
-                  aria-labelledby="options-menu"
-                >
-                  <ul>
-                    <li
-                      className={cn(
-                        'block text-sm leading-5 text-accent-4 lg:text-base lg:no-underline lg:font-bold lg:tracking-wide hover:bg-accent-1 lg:hover:bg-transparent hover:text-accent-8 focus:outline-none focus:bg-accent-1 focus:text-accent-8',
-                        {
-                          underline: !sort,
-                        }
-                      )}
-                    >
-                      <Link href={{ pathname, query: filterQuery({ q }) }}>
-                        <a
-                          onClick={(e) => handleClick(e, 'sort')}
-                          className={
-                            'block lg:inline-block px-4 py-2 lg:p-0 lg:my-2 lg:mx-4'
-                          }
-                        >
-                          Relevance
-                        </a>
-                      </Link>
-                    </li>
-                    {Object.entries(SORT).map(([key, text]) => (
-                      <li
-                        key={key}
-                        className={cn(
-                          'block text-sm leading-5 text-accent-4 hover:bg-accent-1 lg:hover:bg-transparent hover:text-accent-8 focus:outline-none focus:bg-accent-1 focus:text-accent-8',
-                          {
-                            underline: sort === key,
-                          }
-                        )}
-                      >
-                        <Link
-                          href={{
-                            pathname,
-                            query: filterQuery({ q, sort: key }),
-                          }}
-                        >
-                          <a
-                            onClick={(e) => handleClick(e, 'sort')}
-                            className={
-                              'block lg:inline-block px-4 py-2 lg:p-0 lg:my-2 lg:mx-4'
-                            }
-                          >
-                            {text}
-                          </a>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
+              Clear refinements
+            </button>
           </div>
-        </div>
-      </div>
+        )}
+
+        {recentSearches.length > 0 && (
+          <aside className="mb-8 rounded-lg border border-accent-2 bg-accent-0 p-4" aria-label="Recent searches">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm font-semibold text-accent-8">Recent searches</p>
+              <button
+                type="button"
+                onClick={clearRecentSearches}
+                className="min-h-9 text-sm text-accent-5 underline hover:text-accent-8"
+              >
+                Clear history
+              </button>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {recentSearches.map((term) => (
+                <Link
+                  key={term}
+                  href={{ pathname: '/search', query: { q: term } }}
+                  className="min-h-9 rounded-full border border-accent-3 px-3 py-1.5 text-sm hover:border-accent-5"
+                >
+                  {term}
+                </Link>
+              ))}
+            </div>
+          </aside>
+        )}
+
+        {!data ? (
+          <div
+            className={cn('grid gap-6', {
+              'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3': gridDensity === 'comfortable',
+              'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4': gridDensity === 'compact',
+            })}
+          >
+            {rangeMap(12, (i) => (
+              <Skeleton key={i}>
+                <div className="aspect-square w-full" />
+              </Skeleton>
+            ))}
+          </div>
+        ) : visibleProducts.length > 0 ? (
+          <div
+            className={cn('grid gap-6', {
+              'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3': gridDensity === 'comfortable',
+              'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4': gridDensity === 'compact',
+            })}
+          >
+            {visibleProducts.map((product: Product) => (
+              <ProductCard
+                variant="simple"
+                key={product.path || product.id}
+                className="animated fadeIn"
+                product={product}
+                imgProps={{ width: 480, height: 480 }}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-xl border border-dashed border-accent-3 px-6 py-12 text-center">
+            <h2 className="text-xl font-semibold text-accent-9">No matching products</h2>
+            <p className="mx-auto mt-2 max-w-xl text-sm text-accent-5">
+              Try a broader search or remove one or more refinements.
+            </p>
+            {activeRefinements.length > 0 && (
+              <button
+                type="button"
+                onClick={clearRefinements}
+                className="mt-5 min-h-11 rounded-md bg-accent-9 px-5 py-2 text-sm font-semibold text-accent-0 focus:outline-none focus:ring-2 focus:ring-accent-7"
+              >
+                Clear refinements
+              </button>
+            )}
+          </div>
+        )}
+      </section>
     </Container>
   )
 }

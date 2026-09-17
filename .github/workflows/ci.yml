@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - ai/product-completion/myshop
+
+permissions:
+  contents: read
+
+concurrency:
+  group: myshop-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: yarn
+
+      - name: Runtime and product contracts
+        run: yarn test
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Audit production dependencies
+        run: node scripts/audit-production.js
+
+      - name: Typecheck
+        run: yarn types
+
+      - name: Lint site
+        run: yarn workspace next-commerce lint
+
+      - name: Build
+        run: yarn build

@@ -1,0 +1,67 @@
+name: Refresh security lock
+
+on:
+  push:
+    branches:
+      - ai/product-completion/myshop
+    paths:
+      - .github/workflows/refresh-security-lock.yml
+      - package.json
+      - site/package.json
+      - scripts/verify-runtime-contract.js
+      - 'site/**/*.ts'
+      - 'site/**/*.tsx'
+      - 'packages/**/*.ts'
+      - 'packages/**/*.tsx'
+      - site/next.config.js
+      - site/commerce-config.js
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    if: ${{ !contains(github.event.head_commit.message, 'refresh security lockfile') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v5
+        with:
+          ref: ai/product-completion/myshop
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: yarn
+
+      - name: Verify source contracts
+        run: yarn test
+
+      - name: Refresh dependency graph
+        run: yarn install
+
+      - name: Audit production dependencies
+        run: node scripts/audit-production.js
+
+      - name: Typecheck
+        run: yarn types
+
+      - name: Lint site
+        run: yarn workspace next-commerce lint
+
+      - name: Production build
+        run: yarn build
+
+      - name: Commit verified lockfile
+        run: |
+          if git diff --quiet -- yarn.lock; then
+            echo "Lockfile already current"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add yarn.lock
+          git commit -m "chore: refresh security lockfile"
+          git push origin HEAD:ai/product-completion/myshop

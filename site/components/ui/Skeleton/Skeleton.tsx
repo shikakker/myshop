@@ -1,4 +1,4 @@
-import React, { CSSProperties } from 'react'
+import React, { CSSProperties, ReactNode } from 'react'
 import cn from 'clsx'
 import px from '@lib/to-pixels'
 import s from './Skeleton.module.css'
@@ -11,6 +11,7 @@ interface SkeletonProps {
   width?: string | number
   height?: string | number
   boxHeight?: string | number
+  children?: ReactNode
 }
 
 const Skeleton: React.FC<SkeletonProps> = ({
@@ -22,11 +23,8 @@ const Skeleton: React.FC<SkeletonProps> = ({
   show = true,
   boxHeight = height,
 }) => {
-  // Automatically calculate the size if there are children
-  // and no fixed sizes are specified
   const shouldAutoSize = !!children && !(width || height)
 
-  // Defaults
   width = width || 24
   height = height || 24
   boxHeight = boxHeight || height

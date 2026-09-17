@@ -8,11 +8,32 @@ const isSaleor = provider === '@vercel/commerce-saleor'
 const isSwell = provider === '@vercel/commerce-swell'
 const isVendure = provider === '@vercel/commerce-vendure'
 
+const securityHeaders = [
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'X-Frame-Options', value: 'DENY' },
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  {
+    key: 'Permissions-Policy',
+    value: 'camera=(), microphone=(), geolocation=()',
+  },
+]
+
 module.exports = withCommerceConfig({
   commerce,
+  env: {
+    NEXT_PUBLIC_COMMERCE_PROVIDER: provider,
+  },
   i18n: {
     locales: ['en-US', 'es'],
     defaultLocale: 'en-US',
+  },
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: securityHeaders,
+      },
+    ]
   },
   rewrites() {
     return [
@@ -20,14 +41,10 @@ module.exports = withCommerceConfig({
         source: '/checkout',
         destination: '/api/checkout',
       },
-      // The logout is also an action so this route is not required, but it's also another way
-      // you can allow a logout!
       isBC && {
         source: '/logout',
         destination: '/api/logout?redirect_to=/',
       },
-      // For Vendure, rewrite the local api url to the remote (external) api url. This is required
-      // to make the session cookies work.
       isVendure &&
         process.env.NEXT_PUBLIC_VENDURE_LOCAL_URL && {
           source: `${process.env.NEXT_PUBLIC_VENDURE_LOCAL_URL}/:path*`,
@@ -37,5 +54,4 @@ module.exports = withCommerceConfig({
   },
 })
 
-// Don't delete this console log, useful to see the commerce config in Vercel deployments
 console.log('next.config.js', JSON.stringify(module.exports, null, 2))
