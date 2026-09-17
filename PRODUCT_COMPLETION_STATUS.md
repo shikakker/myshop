@@ -3,7 +3,7 @@
 ## Product family
 
 - **Canonical repository:** `shikakker/myshop`
-- Upstream provenance: historical fork/adaptation of `vercel/commerce`
+- Upstream provenance: adaptation of Vercel's historical `vercel/commerce`
 - **Canonical Vercel project:** `myshop` (`prj_dmh1zVvAphPJAlJtKgzAlxvOANKY`)
 - Vercel project root: `site`
 - Product: provider-aware commerce storefront demo / integration sandbox
@@ -13,115 +13,119 @@
 
 ## Current state
 
-**PARTIAL — the truthful local-demo scope now has exact-head CI + READY Vercel evidence and hosted HTTP/runtime smoke. Full visual/interactivity QA at 375/768/1024/1440 and real-provider checkout remain explicit gates.**
+**PARTIAL — the local-demo product scope has a functional catalog/search/cart surface, a full green hosted release gate, and an exact code-head READY Vercel preview. Real-provider checkout/customer E2E and visual viewport interaction QA remain outside the verified boundary.**
 
 ## Product definition
 
-Developer / portfolio reviewer / commerce integrator → needs a truthful storefront reference that can run with sample data or a configured provider → browses catalog/search/products, exercises cart, and sees whether the current provider supports checkout → understands the commerce UI/integration without mistaking demo data for live inventory/orders → can evaluate or continue provider integration safely.
+Developer / portfolio reviewer / commerce integrator → needs a truthful storefront reference that works without production credentials → browses and searches deterministic catalog data, opens product details, exercises cart UI and understands provider capability boundaries → can evaluate or continue the commerce integration without mistaking sample inventory/cart state for a live store.
 
-## T01–T10 — Core tasks
+## T01–T10 — Core fixes / completion tasks
 
-| ID | Status | Task / verification |
+| ID | Status | Task / evidence |
 | --- | --- | --- |
-| T01 | DONE | Canonical repo/Vercel project identified; upstream provenance preserved. |
-| T02 | DONE | Node-22 install blocker removed and production install scoped to deployable storefront. |
-| T03 | DONE | Deterministic contracts/frozen install/audit/typecheck/lint/build gate. |
-| T04 | DONE | Provider mode explicit to UI. |
-| T05 | DONE | Fake checkout disabled in local demo mode with honest recovery/configuration path. |
-| T06 | DONE | ACME/upstream runtime identity and unsupported marketing claims replaced with MyShop demo/provenance copy. |
-| T07 | DONE | Inherited scarcity/event/charity claims removed from sample catalog data. |
-| T08 | DONE | Provider-dependent profile/orders/wishlist fail closed; loading/empty states improved. |
-| T09 | DONE | Node 22 + Next 15.5.24 + React 18.2 runtime, response headers and high/critical dependency boundary verified. |
-| T10 | IN PROGRESS | Exact-head Vercel preview, root/search/cart/account-gate HTTP smoke and runtime-error review are DONE; full visual/interactive QA at 375/768/1024/1440 remains unverified in the current harness. |
-
-## I01–I10 — Improvements
-
-| ID | Status | Improvement |
-| --- | --- | --- |
-| I01 | DONE | Node 22 runtime contract. |
-| I02 | DONE | Production workspace contains only deployable `site`; historical provider source stays out of install graph. |
-| I03 | DONE | Storefront compiles in-repo commerce core/local provider source without obsolete Taskr/provider build toolchain. |
-| I04 | DONE | Permanent CI uses frozen install, contracts, production audit, TypeScript, zero-warning ESLint and build. |
-| I05 | DONE | Cart loading/empty/demo-checkout states with recovery-oriented copy. |
-| I06 | DONE | Account-only routes fail closed when provider auth is disabled. |
-| I07 | DONE | `nosniff`, anti-frame, referrer-policy and permissions-policy headers. |
-| I08 | DONE | `.env.example` placeholders only; no production secret added. |
-| I09 | DONE | Next 15.5.24 / React 18.2 / TypeScript 5.9 migration plus patched dependency graph. |
-| I10 | DONE | CI token reduced to `contents: read`; Actions moved to v7; legacy nested Next Link anchors removed from navbar/product/footer/hero/search, with unique filter IDs and truthful `aria-expanded`. |
+| T01 | DONE | Fixed local provider search returning a permanently empty `products: []` result; it now uses the in-repo catalog. |
+| T02 | DONE | Added explicit local-catalog → commerce `Product` normalization for images, variants and options without `any` escapes. |
+| T03 | DONE | Implemented real local full-text filtering plus price/latest sorting over normalized products. |
+| T04 | DONE | Hardened the search field with native search semantics, trimmed routing input and a durable accessible name. |
+| T05 | DONE | Added runtime validation/narrowing for provider brand edges (`entityId/name/path`) instead of leaking generic `Brand = any` into the page. |
+| T06 | DONE | Reproduced and fixed all strict TypeScript callback failures found by hosted CI using existing `Category`/`Product` domain types. |
+| T07 | DONE | Removed the unsafe `ProductCard` variant `as any` cast and now passes a typed primary variant only when present. |
+| T08 | DONE | Expanded the blocking product contract to cover functional local search, search UX, typed provider data and variant-cast regression. |
+| T09 | DONE | Verified the changed code on Node 22 with frozen install, contracts, production audit, TypeScript, zero-warning lint and production build. |
+| T10 | IN PROGRESS | Exact code-head Vercel preview is READY; README/status are being synchronized and final docs-head delivery checks remain to be recorded in PR evidence. |
 
 ## F01–F10 — Product features
 
-| ID | Status | Feature — user need — value — priority |
+| ID | Status | Feature — user need — value — complexity — priority |
 | --- | --- | --- |
-| F01 | DONE | Sample catalog browsing — evaluate storefront/product UI without external provider — P0. |
-| F02 | DONE | Search/category navigation — find sample/provider products — P1. |
-| F03 | DONE | Product detail/variants — inspect normalized product behavior — P1. |
-| F04 | DONE | Cart add/update/remove path — exercise pricing/local provider hooks — P0. |
-| F05 | DONE | Explicit demo mode — prevent sample data/cart from being mistaken for live store — P0. |
-| F06 | BLOCKED | Real checkout — requires supported external commerce provider, credentials and provider-backed E2E — P0 for a real store. |
-| F07 | DEFERRED WITH REASON | Customer profile/orders require verified provider customer auth/order history. |
-| F08 | DEFERRED WITH REASON | Wishlist remains provider-dependent and disabled in default local configuration. |
-| F09 | DONE | Provider-aware feature gates expose only supported commerce surfaces. |
-| F10 | DEFERRED WITH REASON | Real merchandising/inventory requires business/catalog decisions and authoritative provider data. |
+| F01 | DONE | Functional local catalog search — find demo products without external credentials — turns search from empty placeholder into usable discovery — M — P0. |
+| F02 | DONE | Full-text matching across product name/vendor/description — broader relevant discovery — S — P1. |
+| F03 | DONE | Price low→high / high→low plus latest sorting — compare catalog efficiently — S — P1. |
+| F04 | DONE | Price-band refinements (`<50`, `50–200`, `200+`) — narrow a result set quickly — S — P1. |
+| F05 | DONE | Active refinement summary — understand why the result set changed — S — P1. |
+| F06 | DONE | One-action clear refinements — recover from over-filtering — S — P1. |
+| F07 | DONE | Local recent searches (max 5) — return to prior discovery intents without an account — S — P1. |
+| F08 | DONE | Clear recent-search history — user control over locally stored discovery history — S — P1. |
+| F09 | DONE | Share/copy current search URL — preserve and send the current search state — S — P1. |
+| F10 | DONE | Persistent comfortable/compact product-grid density — adapt browsing density to user preference — S — P1. |
 
-## TDD / regression evidence
+## I01–I10 — Design / UX improvements
 
-- Runtime/product contracts protect demo honesty, provider gating and dependency/runtime boundaries.
-- Hosted exact preview exposed invalid nested `<a><a>` output from legacy Next Link patterns.
-- RED commit `3711b5fd4ec869112fe61e8a9f5ce9b3f81c85d0`, CI run `35077024348`, failed **only** on the new product contract, listing all five intended surfaces: navbar, product card, footer, hero and search filters.
-- GREEN code head `8a24f94b365e324c28276feb6d581a48c9e4bc73` converts those surfaces to current Link semantics. Search also uses unique `categories-menu-button` / `brands-menu-button` / `sort-menu-button` IDs and state-driven `aria-expanded`.
+| ID | Status | Improvement / verification |
+| --- | --- | --- |
+| I01 | DONE | Replaced fragile custom mobile filter-popover state with a labelled responsive filter toolbar. |
+| I02 | DONE | Added clear catalog hierarchy: eyebrow, contextual heading and live result count. |
+| I03 | DONE | Active refinements render as compact visual chips instead of hidden query state. |
+| I04 | DONE | Comfortable and compact responsive grid modes provide distinct browsing densities. |
+| I05 | DONE | Loading state mirrors selected grid density and exposes `aria-busy`. |
+| I06 | DONE | Empty refined results now explain the state and provide a direct `Clear refinements` recovery action. |
+| I07 | DONE | Primary controls use larger minimum touch targets and visible keyboard focus rings. |
+| I08 | DONE | Result/share updates use polite live regions instead of silent state changes. |
+| I09 | DONE | Search input uses `type=search`, search input mode/enter hint, autocomplete control and accessible naming. |
+| I10 | DONE | Recent-search chips/history controls use a responsive wrapping layout and keep persistence optional when storage is blocked. |
 
-## Exact-head verification
+## Regression / TDD evidence
 
-Exact code head: `8a24f94b365e324c28276feb6d581a48c9e4bc73`.
+- New product-experience requirements were added to `scripts/verify-product-contract.js` before implementation (`512cd63cb2d37fa8cc4e95527a759cbe4d69a211`).
+- Root product defect: `packages/local/src/product/use-search.tsx` returned no products regardless of query; the new implementation consumes `data.json`, normalizes products and applies search/sort behavior.
+- Hosted TypeScript failures were reproduced on successive heads rather than hidden:
+  - first run exposed five implicit-`any` callbacks;
+  - brand-edge boundary validation removed two;
+  - final explicit `Category`/`Product` boundaries removed the remaining three.
+- Product contract now rejects regression to empty local search, missing discovery controls, unvalidated brand data and ProductCard variant `any` casts.
 
-GitHub CI push run `35077219186`: **PASS**
+## Latest verified code-bearing head
+
+Code head: `6ada021d0bd084b9fed262a4765b4d41a950a042`.
+
+GitHub CI push run `35227440174`: **PASS**
 
 - runtime + product contracts — PASS;
 - `yarn install --frozen-lockfile` — PASS;
-- production dependency audit — PASS;
+- production dependency audit — PASS (`0 critical / 0 high`; moderate transitive findings remain visible);
 - TypeScript — PASS;
 - ESLint `--max-warnings=0` — PASS;
-- Next production build — PASS.
+- Next.js production build — PASS.
 
-CI security checkpoint before the Link regression also verified the same gate after reducing workflow permissions to `contents: read` and moving checkout/setup-node to Actions v7.
+Vercel exact code-head deployment:
 
-Vercel exact-head deployment:
+- `dpl_x4nWze6CUtKww5hoLy6hsLzfM9M3` — **READY**;
+- URL: `https://myshop-qqi48313e-egordenisov.vercel.app`;
+- exact Git SHA: `6ada021d0bd084b9fed262a4765b4d41a950a042`;
+- Next.js 15.5.24 type/lint/compile — PASS;
+- static generation — **23/23** pages;
+- demo product routes generated for shirt, jacket and short-sleeve T-shirt in configured locales.
 
-- `dpl_Bv3qC2sJLm5shbBSfPirC1UiRQXQ` — **READY**;
-- URL: `https://myshop-orm8550ho-egordenisov.vercel.app`;
-- exact Git SHA: `8a24f94b365e324c28276feb6d581a48c9e4bc73`;
-- build reached Next 15.5.24 type/lint/compile/SSG and deployed successfully.
+## Existing trust / security boundary
 
-Hosted smoke:
-
-- `/` — HTTP 200; truthful `MyShop Commerce Demo` metadata and sample catalog;
-- `/search` — HTTP 200; unique filter button IDs, `aria-expanded="false"` when collapsed, single anchors rather than nested anchors;
-- `/cart` — HTTP 200 with truthful empty/demo checkout state;
-- `/orders`, `/profile`, `/wishlist` — HTTP 404 in local provider mode, matching the intentional fail-closed customer-feature boundary;
-- root hosted HTML confirms navbar/product cards/hero/footer render single anchors;
-- Vercel runtime errors for the canonical project in the checked 1-hour window: **none**.
-
-This harness does not provide a full visual browser viewport/interaction runner, so responsive layout at 375/768/1024/1440, menu clicks, cart mutations and keyboard traversal are not claimed as visually exercised even though the source/build/HTML gates are green.
-
-## Security / reliability boundary
-
-- No production commerce credential is committed or changed.
 - Local provider cannot submit a real order.
+- Sample inventory explicitly states that it is not offered for real purchase.
+- No production commerce credential is committed or changed.
+- Customer-only features fail closed when provider capability is unavailable.
+- CI GitHub token is read-only.
 - Production audit blocks high/critical dependency findings.
-- Customer-only features remain gated by provider capability.
-- Workflow GitHub token is read-only.
-- Security response headers are present on the READY preview.
-- CSP remains deferred until a real external provider/browser pass establishes required external origins.
+- Search history and grid preference are local browser enhancements and tolerate blocked storage.
+- Real checkout/auth/orders still require a supported external provider, credentials and provider-backed E2E.
+
+## Verification boundary / blockers
+
+**BLOCKED ONLY BY:**
+
+1. supported external commerce provider + production-safe credentials/catalog/customer/order data for real checkout/customer E2E;
+2. visual/interactive browser QA at 375/768/1024/1440 — the current integration can verify build/runtime/HTTP surfaces but does not provide a full viewport interaction runner in this workflow.
+
+These do not invalidate the default local-demo scope; they prevent claiming a real live store or full visual browser DONE.
 
 ## Project checkpoint
 
 **PROJECT:** MyShop (`shikakker/myshop`)  
-**Initial:** inherited ACME identity, fake local checkout, unsupported product claims, broken Node-22 install, no reliable CI, Next 12/React 17 and large vulnerable provider dependency graph.  
-**Fixed:** production-workspace boundary, source-owned local provider, Next 15/React 18 migration, high/critical dependency cleanup, provider honesty, feature gates, security headers, read-only CI, current Next Link semantics, search a11y IDs/state, docs and verified lockfile.  
-**Verification:** contracts/install/audit/typecheck/lint/build = PASS; exact-head Vercel = READY; hosted root/search/cart/account-gate smoke = PASS; runtime errors = none; full visual viewport/browser interaction sweep = NOT AVAILABLE in current harness.  
+**Initial:** inherited storefront with historical demo identity, provider-gated real commerce, and a local search hook that always returned an empty product set.  
+**Fixed:** functional local search/catalog normalization; strict provider/search types; safe ProductCard variant flow; search semantics; blocking regressions; release pipeline; prior provider honesty/security work retained.  
+**Features:** full-text local search, sorting, price refinements, active filters/reset, recent searches/history clear, share link, persistent grid density.  
+**Design/UX:** responsive labelled toolbar, stronger hierarchy/result status, chips, dual-density grids, loading/empty recovery, touch/focus/a11y improvements, responsive recent searches.  
+**Verification:** code-bearing head contracts/install/audit/typecheck/lint/build = PASS; exact Vercel = READY; final docs-head verification is recorded separately in PR once generated.  
 **Git:** `ai/product-completion/myshop`, Draft PR #2.  
-**Remaining blockers:** full visual/interactive browser QA; external provider inputs for real checkout/customer flows.  
+**Remaining blockers:** real-provider credentials/data for checkout/customer E2E; full visual/interactive browser viewport runner.  
 **Status:** **PARTIAL**.
 
-No merge, production promotion, provider credential mutation, live store mutation, billing action or destructive migration has been performed.
+No merge, production promotion, provider credential mutation, live-store mutation, billing action or destructive migration has been performed.
