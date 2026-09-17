@@ -33,6 +33,7 @@ const ProductCard: FC<Props> = ({
     baseAmount: product.price.retailPrice,
     currencyCode: product.price.currencyCode!,
   })
+  const primaryVariant = product.variants[0]
 
   const rootClassName = cn(
     s.root,
@@ -69,11 +70,11 @@ const ProductCard: FC<Props> = ({
 
       {variant === 'simple' && (
         <>
-          {process.env.COMMERCE_WISHLIST_ENABLED && (
+          {process.env.COMMERCE_WISHLIST_ENABLED && primaryVariant && (
             <WishlistButton
               className={s.wishlistButton}
               productId={product.id}
-              variant={product.variants[0]}
+              variant={primaryVariant}
             />
           )}
           {!noNameTag && (
@@ -107,11 +108,11 @@ const ProductCard: FC<Props> = ({
 
       {variant === 'default' && (
         <>
-          {process.env.COMMERCE_WISHLIST_ENABLED && (
+          {process.env.COMMERCE_WISHLIST_ENABLED && primaryVariant && (
             <WishlistButton
               className={s.wishlistButton}
               productId={product.id}
-              variant={product.variants[0] as any}
+              variant={primaryVariant}
             />
           )}
           <ProductTag
